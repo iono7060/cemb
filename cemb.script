@@ -13,11 +13,17 @@
 :date.April 28, 2026
 :author.Evie Cooper
 .nameeps cmstype=eps pdsfull='wec.doc.eps'
-:artdef id=clogo name=clogo.
+:artdef id=cynthia name=vgcynthi align=center.
+:artdef id=clogo name=clogo align=center.
 :eprolog.
 :frontm.
 :tipage.
-:cover.
+.config coverpg on
+.when 'usecyn' insert
+:cover artid=cynthia.
+.when 'not usecyn' insert
+:cover artid=clogo.
+.config coverpg off
 :notices.
 This is the textbook for the ELEC 3040/3050 (Embedded Systems Design
 Lab) class.
@@ -27,6 +33,8 @@ in this book in ELEC 2220 (Computer Systems) before reading this book.
  
 No generative AI (ChatGPT, Gemini, Claude, etc) was used in the
 production of this book.
+ 
+Thank you Dr. Brown, Dr. Nelson, and Dr. Nelms for their feedback during the composition of this book!
 :enotices.
 :vnotice.
 :vnhd.First Edition, Fall 20226
@@ -98,10 +106,13 @@ Think of this like writing assembler programs with less typing!
 :li.Button:
 :p.:rk.Run:erk. 
 :eul.
-:p.This document was formatted with IBM BookMaster 1.4; the images and 
-artwork were prepared with :pv.ADMDRAW:epv. (based on an IBM GDDM 3.2 
-sample program); the text was edited with Mike Cowlishaw's LEXX. The 
-HTML version of this document was formatted with AT&T :pv.B2H:epv..
+:p.This document was formatted with IBM BookMaster 1.4 and DCF/SCRIPT 
+1.4; the images were prepared with :pv.ADMDRAW:epv. (a custom-written 
+VM/CMS vector artwork program); artwork was prepared with Inkscape 
+1.4.4; the text was edited with Mike Cowlishaw's LEXX; the HTML version 
+of this document was formatted with AT&T :pv.B2H:epv.. 
+:p.There are no raster images in this document unless you are viewing 
+the HTML version of this, wherein all of the images are in GIF format. 
 :p.Thank you Dr. Brown, Dr. Nelson, and Dr. Nelms for their feedback 
 during the composition of this book!
 :toc.
@@ -122,9 +133,9 @@ understand the environment in which your programs are written and run.
 In the olden days, one would just execute a command to run the C 
 compiler (since, likewise, in those olden days, computers were 
 command-line-based systems where you would just type in the name of a 
-program you want to run on a command prompt) like :pk.cc:epk. on 
-UNIX,:pk.cl:epk. on MS-DOS, so on and so forth; nowadays, we just click 
-the Run button and it somehow works!
+program you want to run on a command prompt) like :pk.cc:epk. on UNIX, 
+:pk.cl:epk. on MS-DOS, so on and so forth; nowadays, we just click the 
+Run button and it somehow works!
 :h2.Compilation Process
 :p.However, it is :hp1.definitely:ehp1. helpful to understand what goes 
 on under the hood! When you click that Run (or Debug) button, the 
@@ -246,8 +257,8 @@ one of these to the linker and it will automatically fetch variable
 references and functions out of the library collection just as if you 
 passed many object files to it.
 :i1.Library File
-:p.The C runtime library (which provides functions 
-like:pk.strcpy:epk.,:pk.memset:epk., and such) is also a, as the name 
+:p.The C runtime library (which provides functions like 
+:pk.strcpy:epk., :pk.memset:epk., and such) is also a, as the name 
 implies, a library file linked with every program!
 :h0.C Language Primer
 :p.This section will provide a basic primer on the C language, syntax, 
@@ -349,9 +360,8 @@ whether or not the C compiler will support the usage of negative values
 on a variable or not.
 :i1.Signed
 :i1.Unsigned
-:p.By default, variables are signed unless prefixed by 
-the:pk.unsigned:epk. keyword. Here are some example variable 
-definitions:
+:p.By default, variables are signed unless prefixed by the 
+:pk.unsigned:epk. keyword. Here are some example variable definitions:
 :fig width=column place=inline frame=rules.
 :xmp.
 int myNumber;            // no defined default value
@@ -626,8 +636,8 @@ myProgramState = WAITING;
 :p.Please note something :hp2.extremely important:ehp2. when using 
 :pv.enums:epv.: you can only have one occurrence of every word in your 
 program!
-:p.In other words, you can't define two :pv.enums:epv. that both have 
-a:pk.WAITING:epk. enumerator!
+:p.In other words, you can't define two :pv.enums:epv. that both have a 
+:pk.WAITING:epk. enumerator!
 :elblbox.
 :h2 id=ltrls.Extra Immediate Types
 :p.
@@ -838,9 +848,9 @@ void callThem() {
 :figcap.Calling functions with return types
 :efig.
 :h3.The Main Function
-:p.Your program will :hp5.always:ehp5. start with a function 
-named:pk.main:epk., with an :pv.int:epv. return type. This is defined 
-as follows:
+:p.Your program will :hp5.always:ehp5. start with a function named 
+:pk.main:epk., with an :pv.int:epv. return type. This is defined as 
+follows:
 :fig width=column place=inline frame=rules.
 :xmp.
 void somecode() {
@@ -921,8 +931,8 @@ if(100 > 10) {  // this is the "condition"
 :p.This can, of course, be more complex; please see 
 :hdref refid=elseif..
 :h3.Conditions
-:p.The :hp2.condition:ehp2. within the :pk.if:epk. statement body 
-(or:pk.while:epk. statement, or :pk.for:epk. statement) contains a 
+:p.The :hp2.condition:ehp2. within the :pk.if:epk. statement body (or 
+:pk.while:epk. statement, or :pk.for:epk. statement) contains a 
 comparison operation, which are of the following forms:
 :i2.Conditions
 :dl tsize=15.
@@ -1027,8 +1037,8 @@ statement.
 :p.
 :artwork runin name=keyicon width=p18. This is a :hp3.key
 concept!:ehp3.
-:p.If you want to create a :hp3.loop,:ehp3. you will want to use 
-a:pk.while:epk. loop (or a :pk.for:epk. loop, described in 
+:p.If you want to create a :hp3.loop,:ehp3. you will want to use a 
+:pk.while:epk. loop (or a :pk.for:epk. loop, described in 
 :hdref refid=forloop.).
 :i1.while
 :p.A :pk.while:epk. loop will execute a block of code as long as a 
@@ -1125,8 +1135,8 @@ do {
 :h2 id=forloop.For Statements
 :p.The purpose of a :pk.for:epk. statement is primarily to construct 
 loops that will run for a specific number of cycles, or until a certain 
-condition has been met; it provides a more feature-rich version of 
-a:pk.while:epk. statement. The syntax is follows:
+condition has been met; it provides a more feature-rich version of a 
+:pk.while:epk. statement. The syntax is follows:
 :i1.for
 :fig width=column place=inline frame=rules.
 :xmp.
@@ -1228,8 +1238,9 @@ void caseDemo() {
 :efig.
 :p.The purpose of the :pk.break:epk. statement is to provide an 
 :hp2.exit:ehp2. from the :pk.case:epk. block it is found in. If you 
-forget to code in the :pk.break:epk. statements for your:pk.case:epk.s, 
-you will end up accidentally running every code block for every case!
+forget to code in the :pk.break:epk. statements for your 
+:pk.case:epk.s, you will end up accidentally running every code block 
+for every case!
 You can, of course, do some interesting things with this -- see the 
 call to :pv.doFunction3and4():epv. for an example of two back-to-back 
 cases that result in the same code chunk being executed.
@@ -1591,8 +1602,8 @@ alignment for you.
 moved over :hp5.four:ehp5. bytes such that the address increases by an 
 entire :pk.int:epk. at a time.
 :note.If you :hp1.cast:ehp1. the pointer type for your pointer to 
-:pv.a:epv. to something that :hp1.isn't:ehp1. an :pk.int:epk. (like 
-a:pk.char:epk.), you will then be responsible for ensuring correct 
+:pv.a:epv. to something that :hp1.isn't:ehp1. an :pk.int:epk. (like a 
+:pk.char:epk.), you will then be responsible for ensuring correct 
 alignment (because incrementing the :pk.char:epk.-casted pointer to 
 :pv.a:epv. by 1 will not fully shift the memory address over into the 
 next :pk.int:epk.). For more information on this, see 
@@ -1775,8 +1786,8 @@ is searched
 from STM32CubeIDE and ARM Clang from &mu.Vision are both considered) 
 have a compiler argument that lets you specify a custom inclusion 
 search path. Though you won't need to alter this path on STM32CubeIDE 
-projects (as the IDE will automatically find any files in 
-the:pk.inc:epk. directories of your project and add those to the search 
+projects (as the IDE will automatically find any files in the 
+:pk.inc:epk. directories of your project and add those to the search 
 path), a Project Setting entry will let you add more directories.
 :h2.Macros
 :p.A :hp3.macro:ehp3. is a very useful feature of the C preprocessor 
@@ -2054,12 +2065,11 @@ hard to see them!
 :elblbox.
 :h2.Extended Inline Assembly
 :p.If you wish to reference any variables, the compiler will allow you 
-to substitute those into the assembler statements 
-as:pk.%0:epk.,:pk.%1:epk., etc. In other words, if you plug in a 
-variable name, you will reference it as :pk.%0:epk. in the 
-statement.However, if you use the more complicated :hp5.custom-named 
-variable approach:ehp5., you can use an actual variable name instead of 
-a number!
+to substitute those into the assembler statements as :pk.%0:epk., 
+:pk.%1:epk., etc. In other words, if you plug in a variable name, you 
+will reference it as :pk.%0:epk. in the statement.However, if you use 
+the more complicated :hp5.custom-named variable approach:ehp5., you can 
+use an actual variable name instead of a number!
 :i2.Extended syntax (percents)
 :p.Likewise, you will need to specify the following things:
 :ol.
@@ -2116,11 +2126,11 @@ into any registers or memory addresses) and two inputs (the
 :p.The :pk."memory":epk. means that we are :hp3.modifying memory:ehp3. 
 -- this function just simply stores a 32-bit variable at some memory 
 address. If you are :hp3.modifying the condition code:ehp3. (which 
-would occur if you use any math instructions), you would 
-specify:pk."cc":epk. instead.
-:p.You can also see the :q.constraint lists:eq. holding 
-those:pk."=r":epk. terms. This tells the compiler to pick a register 
-(or several) for your statement to use. You can get the compiler to 
+would occur if you use any math instructions), you would specify 
+:pk."cc":epk. instead.
+:p.You can also see the :q.constraint lists:eq. holding those 
+:pk."=r":epk. terms. This tells the compiler to pick a register (or 
+several) for your statement to use. You can get the compiler to 
 allocate the following things for you:
 :ul.
 :li.:pk."=r":epk. is for a :hp2.register:ehp2.
@@ -2133,7 +2143,7 @@ sets, where there is a specific way that you pass memory addresses
  
 :eul.
 :lblbox.Register Naming
-:p.Now, you might ask :hp1.:q.Evie, where in the world are the register 
+:p.Now, you might ask :hp1.:q.uhh, where in the world are the register 
 names?!:eq.:ehp1. Well, you cannot just take any register and use it 
 :hp1.because the compiler may be using that for a variable 
 already!:ehp1. This is why you have to let the compiler figure out 
@@ -2174,10 +2184,10 @@ you may wish to add a :hp2.qualifier:ehp2. if you want to lock a
 variable or prevent the C compiler from optimizing access to the 
 variable.
 :fn.One might ask why they could possibly want to un-optimize 
-something, and the answer is simple: you will want to use 
-the:pk.volatile:epk. keyword (which this chapter discusses shortly 
-after where this footnote appears) whenever you are using variables 
-within interrupt service routines.
+something, and the answer is simple: you will want to use the 
+:pk.volatile:epk. keyword (which this chapter discusses shortly after 
+where this footnote appears) whenever you are using variables within 
+interrupt service routines.
 :efn.
 :h2 id=storcls.Storage Classes
 :p.There are four storage classes you can stick before the type of your 
@@ -2605,8 +2615,8 @@ int main() {
 :figcap.More-complex STM32 C program
 :efig.
 :p.As you can see in the above example, I have an assembly-language 
-statement in the program! This is wrapped in 
-the:pk.__asm__("XXXX"):epk. compiler built-in function. For more 
+statement in the program! This is wrapped in the 
+:pk.__asm__("XXXX"):epk. compiler built-in function. For more 
 information on this, flip back to :hdref refid=ilasm..
 :h1.GPIO
 :p.The first thing you will want to configure are the :hp2.general 
@@ -2626,9 +2636,9 @@ literals. Some of the registers we will be using in this exercise are:
 :li.The :hp5.Register and Clock Control:ehp5. register, :pk.RCC:epk.
 :ul.
 :li.:pk.RCC->AHB2ENR:epk. 
-:fn.This is the C statement you will type in to use this 
-register;:pk.RCC:epk. is a structure pointer, so you use the arrow 
-operator:pk.->:epk to access the members. 
+:fn.This is the C statement you will type in to use this register; 
+:pk.RCC:epk. is a structure pointer, so you use the arrow operator 
+:pk.->:epk to access the members. 
 :efn.
 -- the AHB2 peripheral clock enable register
 :eul.
@@ -2801,7 +2811,7 @@ else {
 :exmp.
 :figcap.PA0 input reading example
 :efig.
-:p.Now, you might be asking :q.Evie, why are you ANDing the IDR value 
+:p.Now, you might be asking :q.hey, why are you ANDing the IDR value 
 with 1?:eq. Well, you want to :hp5.mask off:ehp5. bits such that you 
 only :hp1.get what you want:ehp1. 
 :lblbox.Special Pins on GPIOA
@@ -3124,8 +3134,8 @@ resistor:ehp1. on PA1.
 :fn.See :hdref refid=pupd. for help with this!
 :efn.
 :li.Determine which EXTI interrupt line you need to enable in the NVIC.
-:li.Set the flags for the EXTI line (:pk.FTSR1:epk., :pk.PR1:epk., 
-and:pk.IMR1:epk.) for a falling-edge-triggered interrupt.
+:li.Set the flags for the EXTI line (:pk.FTSR1:epk., :pk.PR1:epk., and 
+:pk.IMR1:epk.) for a falling-edge-triggered interrupt.
 :li.Enable the EXTI IRQ in the NVIC.
 :fn.Nested Vectored Interrupt Controller
 :efn.
@@ -3223,8 +3233,8 @@ manual name and C program variable name:
 :c.:pk.SYSCFG-&gtsym.EXTICR&lbrk.3&rbrk.:epk.
 :etable.
 :p.So, there are two ways to populate the bits of the :pv.EXTICR:epv. 
-register you need to write to (which, for our PA1 interrupt, 
-is:pk.SYSCFG->EXTICR&lbrk.0&rbrk.:epk.):
+register you need to write to (which, for our PA1 interrupt, is 
+:pk.SYSCFG->EXTICR 0¡:epk.):
 :ol.
 :li.By directly writing the bits
 :li.Using the macro bitmask names
@@ -3299,8 +3309,8 @@ interrupt by your program
 slot :q.dismisses:eq. an interrupt (you will need to do this in your
 IRQ handler function)
 :etable.
-:note.Just like there is an :pk.FTSR1:epk., there is also 
-an:pk.FTSR2:epk. for additional interrupts -- you won't be using this, 
+:note.Just like there is an :pk.FTSR1:epk., there is also an 
+:pk.FTSR2:epk. for additional interrupts -- you won't be using this, 
 though!
 :p.These registers are laid out as follows:
 :fig width=column place=inline frame=rules.
@@ -3370,9 +3380,9 @@ NVIC_EnableIRQ(EXTI1_IRQn);
 :efig.
 :p.This part is fairly simple! Note that the syntax of this really does 
 say :pk.EXTI1_IRQn:epk.; you can see the :pk.1:epk. there is the 
-variable part, so if you were using an interrupt on PB6, you would 
-use:pk.EXTI6_IRQn:epk.. Before the program can run, though, you must 
-run one more function to enable :hp1.all:ehp1. interrupts on the CPU 
+variable part, so if you were using an interrupt on PB6, you would use 
+:pk.EXTI6_IRQn:epk.. Before the program can run, though, you must run 
+one more function to enable :hp1.all:ehp1. interrupts on the CPU 
 globally:
 :fig width=column place=inline frame=rules.
 :p.Using the C function:
@@ -3394,9 +3404,8 @@ that you cannot deviate from (see the info-box after the code sample
 for an explanation as to why this is the case)!
 :i1.ISR
 :p.Since we are using :pv.EXTI1:epv. because we want PA1 to be our 
-interrupt pin, we have to write a function 
-named:pk.EXTI1_IRQHandler:epk. and it will have a :pv.void:epv. return 
-type.
+interrupt pin, we have to write a function named 
+:pk.EXTI1_IRQHandler:epk. and it will have a :pv.void:epv. return type.
 :p.Here is the general form of an EXTI ISR:
 :fig width=column place=inline frame=rules.
 :xmp.
@@ -3687,9 +3696,9 @@ TIMxCLK &Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ar.&Lv.
 :efig.
 :h2.Using Timers for Interrupts
 :p.Before we can actually program any of the timers, we have to first 
-enable them -- that requires you to set the correct bit in 
-either:pk.RCC->APB1ENR1:epk. or :pk.RCC->APB2ENR:epk.. Here is a table 
-of what bit name you would set to :pv.1:epv. with the necessary C 
+enable them -- that requires you to set the correct bit in either 
+:pk.RCC->APB1ENR1:epk. or :pk.RCC->APB2ENR:epk.. Here is a table of 
+what bit name you would set to :pv.1:epv. with the necessary C 
 statements listed:
 :i2.Enabling (APB1/APB2 register)
 :table id=timenb cols='1i 3i'.
@@ -3783,8 +3792,8 @@ function (the right-most one), because you can omit the prescaler for
 faster clocks (which will be useful when you do :hp2.PWM:ehp2.).
 :h3.Enabling the Timer
 :p.To actually enable your timer, you would simply use one of the lines 
-from :tref refid=timenb. like so (for TIM6), and also 
-set:pk.TIMx->PSC:epk. alongside :pk.TIMx->ARR:epk.:
+from :tref refid=timenb. like so (for TIM6), and also set 
+:pk.TIMx->PSC:epk. alongside :pk.TIMx->ARR:epk.:
 :fig width=column place=inline frame=rules.
 :xmp.
 void timersetup() {
@@ -3929,10 +3938,10 @@ matter what the duty cycle is!:ehp1.
 :li.Turn on the output for channel 1 with the :pk.CCER:epk. register
 :li.Set the counter threshold value (equivalent to the :hp2.duty 
 cycle:ehp2.) in the :pk.CCR1:epk. register
-:li.Enable the interrupt by setting the :pv.URS:epv. flag in 
-the:pk.CR1:epk. register
-:li.Zero the counter by setting the :pv.UG:epv. flag in the:pk.EGR:epk. 
-register
+:li.Enable the interrupt by setting the :pv.URS:epv. flag in the 
+:pk.CR1:epk. register
+:li.Zero the counter by setting the :pv.UG:epv. flag in the 
+:pk.EGR:epk. register
 :li.Set both the :pv.CC1IE:epv. (channel 1 interrupt enable) and 
 :pv.UIE:epv. flags in the :pk.DIER:epk. register
 :li.Clear the :pv.CC1IF:epv. and :pv.UIF:epv. flags in the :pk.SR:epk. 
@@ -3944,16 +3953,16 @@ counting
 :pv.TIM2:epv.; a version of code that won't enable interrupts will also 
 be shown later!
 :h3.CCR1 and the Duty Cycle
-:p.The :pk.TIMx->CCR1:epk. register sets the :hp5.threshold:ehp5. 
-that:pk.TIMx->CNT:epk. count-up register must reach before an 
-:q.event:eq. occurs -- in our case, the event will:
+:p.The :pk.TIMx->CCR1:epk. register sets the :hp5.threshold:ehp5. that 
+:pk.TIMx->CNT:epk. count-up register must reach before an :q.event:eq. 
+occurs -- in our case, the event will:
 :ol.
 :li.Generate an interrupt
 :li.Flip the output state of the PWM bit
 :eol.
 :p.Remember that the value you write to :pk.CCR1:epk. needs to be a 
-:hp1.fraction:ehp1. of the value stored in :pk.ARR:epk.; the value 
-in:pk.PSC:epk. is not considered and merely serves to alter the PWM 
+:hp1.fraction:ehp1. of the value stored in :pk.ARR:epk.; the value in 
+:pk.PSC:epk. is not considered and merely serves to alter the PWM 
 frequency. A handy formula for computing the value is as follows:
 :df align=center.
 CCR1 = DC * ARR
@@ -3975,8 +3984,8 @@ CCR1 = <DC * ARR> over 10
 :note.This does :hp1.integer division:ehp1. since we are not using any 
 decimated numbers in either the numerator or denominator.
 :h3.Picking the Output (or Input)
-:p.The most difficult thing to do in this process is configuring 
-the:pk.CCMR1:epk. register; the other register configurations are 
+:p.The most difficult thing to do in this process is configuring the 
+:pk.CCMR1:epk. register; the other register configurations are 
 relatively simple and self-explained by the list under 
 :hdref refid=timpwm.. However, this register is quite tough because it 
 has :hp1.two:ehp1. modes, depending on whether or not the timer's 
@@ -4036,8 +4045,8 @@ function
 :dd.:pv.CC1:epv. is connected to an internal trigger (this is not 
 particularly useful)
 :edl.
-:p.Whenever you are in output mode, you will need to populate 
-the:pk.OC1M:epk. bits (which are bits 4 through 6) to some specific 
+:p.Whenever you are in output mode, you will need to populate the 
+:pk.OC1M:epk. bits (which are bits 4 through 6) to some specific 
 pattern; for input mode, you will need to optionally set its prescaler 
 (which is similar to the :pk.TIMx->PSC:epk. register, but another 
 :q.layer:eq.), set the :hp1.filter:ehp1. (:pk.IC1F:epk.) to control how 
@@ -4221,12 +4230,19 @@ void TIM2_IRQHandler() {
  
 :figcap.TIM2 IRQ handler code
 :efig.
-:h3.About ClearPendingIRQ
+:h3 id=cpirq.About ClearPendingIRQ
 :p.Whenever the ISR starts, the NVIC pending-interrupt bit will be 
-cleared automatically. The reason the example ISRs above 
-run:pk.NVIC_ClearPendingIRQ:epk. is because if for whatever reason an 
+cleared automatically. The reason the example ISRs above run 
+:pk.NVIC_ClearPendingIRQ:epk. is because if for whatever reason an 
 interrupt fires :hp1.during the ISR,:ehp1. you will have nested 
-interrupts and you should dismiss the extra interrupts!
+interrupts and you should dismiss the extra interrupts! 
+:p.This is especially the case for timers, wherein if your timer ISR 
+takes too long to run,
+:fn.That is, if your code takes longer to run than your timer interrupt 
+frequency!
+:efn.
+you may end up with a condition where you have far too many nested 
+interrupts processing (and this leads to your program crashing).
 :h1 id=adc.ADC
 :p.Sometimes, you may wish to sample some kind of analog signal in real 
 time. Some of these signals may include:
@@ -4380,8 +4396,8 @@ voltage reference for the sampling)
 (disabling) the :pk.ADC_CFGR_CONT:epk. bit of the :pk.ADCx->CFGR:epk. 
 register
 :li.Select the overrun mode to either preserve the last good value or 
-permit the ADC to read anyways by setting or clearing 
-the:pk.ADC_CFGR_OVRMOD:epk. bit of the :pk.ADCx->CFGR:epk. register
+permit the ADC to read anyways by setting or clearing the 
+:pk.ADC_CFGR_OVRMOD:epk. bit of the :pk.ADCx->CFGR:epk. register
 :li.Set the :pk.RES&lbrk.1:0&rbrk.:epk. bits of the :pk.ADCx->CFGR:epk. 
 register
 :fn.These are bits 4 and 3 of the register!
@@ -4399,15 +4415,15 @@ to one of the four values below:
 :dt.:pk.11:epk. 
 :dd.6 bits
 :edl.
-:li.If using :hp2.DMA mode:ehp2., set the :pk.ADC_CFGR_DMACFG:epk. 
-and:pk.ADC_CFGR_DMAEN:epk. bits of the :pk.ADCx->CFGR:epk. register 
+:li.If using :hp2.DMA mode:ehp2., set the :pk.ADC_CFGR_DMACFG:epk. and 
+:pk.ADC_CFGR_DMAEN:epk. bits of the :pk.ADCx->CFGR:epk. register 
 :hp1.and also:ehp1. configure the DMA block
 :fn.We will cover this later, flip to :hdref refid=adcdma.if you're 
 curious right now!
 :efn.
-:li.Set the various parameters for the :q.regular sequences:eq. in 
-the:pk.ADCx_SQRy:epk. registers where y is 0 to 3; set the :pk.SQ1:epk. 
-to:pk.SQ4:epk. bits; read on to see what the layout of this register is 
+:li.Set the various parameters for the :q.regular sequences:eq. in the 
+:pk.ADCx_SQRy:epk. registers where y is 0 to 3; set the :pk.SQ1:epk. to 
+:pk.SQ4:epk. bits; read on to see what the layout of this register is 
 and what the bit-setting does/selects
 :li.Set the :pk.ADC_CR_ADEN:epk. bit of the :pk.ADCx_CR:epk. register
 :li.Wait for the :pk.ADC_ISR_ADRDY:epk. bit of the :pk.ADCx->ISR:epk. 
@@ -4415,16 +4431,16 @@ register to set
 :fn.C statement to do this: :pv.while(!(ADC1->ISR & 
 ADC_ISR_ADRDY));:epv. 
 :efn.
-:li.Start conversion by setting the :pk.ADC_CR_ADSTART:epk. bit of 
-the:pk.ADCx->CR:epk. register
+:li.Start conversion by setting the :pk.ADC_CR_ADSTART:epk. bit of the 
+:pk.ADCx->CR:epk. register
 :eol.
 :h2.Programming the ADC
 :p.This section will show you how to initialize the ADC and show you 
 what the register layouts are. At the end, we will examine code samples 
 that will do and don't use DMA mode!
 :h3.ADC Input Channels
-:p.Each ADC has :hp3.18:ehp3. input channels; the ones for:pk.ADC1:epk. 
-are as follows for the NUCLEO-32 board:
+:p.Each ADC has :hp3.18:ehp3. input channels; the ones for 
+:pk.ADC1:epk. are as follows for the NUCLEO-32 board:
 :fn.For other STM32 boards, see the datasheets listed in 
 :hdref refid=biblio.!
 :efn.
@@ -4654,9 +4670,9 @@ down to 0.7 volts!
 :efn.
 :h3 id=adcdma.Using ADC DMA Mode
 :p.This is a modified version of the previous example that uses the 
-first DMA controller's 0th stream to copy the ADC data 
-register,:pk.ADC1->DR:epk., to a variable in our program that we can 
-read at any time. This example is split into two code blocks:
+first DMA controller's 0th stream to copy the ADC data register, 
+:pk.ADC1->DR:epk., to a variable in our program that we can read at any 
+time. This example is split into two code blocks:
 :ol.
 :li.DMA initialization code
 :li.ADC initialization code
@@ -4740,6 +4756,94 @@ ADC1->CR |= ADC_CR_ADSTART;
 :p.Now, just like in the non-DMA example, you will have the ADC value 
 crammed into the :pv.adc_buf:epv. buffer and only the first twelve bits 
 will be significant!
+:h1.Serial Communications 
+:p.While none of this material is required in the ELEC 3040/3050 class, 
+I am including this information in case you wish to use an STM32 in 
+your Capstone project! 
+:p.There are two serial interfaces that we will cover: 
+:ol.
+:li.:hp2.USART:ehp2. -- used for the commonplace :q.character 
+displays:eq.,
+:fn.These go by many names, but most of these feature 2 rows of 18 
+characters; these are frequently used in Capstone projects! 
+:efn.
+communication with a computer, and more
+:li.:hp2.SPI:ehp2. -- used for communication with serialized memory 
+ICs, many types of sensors, and more
+:eol.
+:p.Let us learn how to configure the UART! 
+:h2.USART 
+:p.The :hp2.Universal Synchronous/Asynchronous 
+Receiver/Transmitter,:ehp2. often called a :q.serial port,:eq. or a 
+:q.COM port,:eq. 
+:fn.Note that a COM port on the back of a PC or USB-to-serial adapter 
+operates at :hp5.&pm.15 volts:ehp5. and will absolutely kill your STM32 
+-- this UART connector type is called :hp2.RS232.:ehp2. 
+:efn.
+is a very common and simple way of (as discussed just above) 
+communicating with PCs and input/output devices.
+:i1.USART/UART 
+:lblbox.USART or UART? 
+:p.The STM32 UART controller has an :hp1.optional synchronous 
+mode,:ehp1. wherein the controller provides an additional clock pin. 
+:p.In asynchronous mode, you only use three pins: 
+:ol.
+:li.Ground 
+:li.Receive 
+:li.Transmit
+:eol.
+:p.Synchronous mode adds a :hp5.clock:ehp5. pin. 
+:elblbox.
+:h3.Computing the Baud Rate 
+:p.Before you can send and receive anything, you have to determine what 
+:hp2.baud rate:ehp2. you will be using! Here are some common baud 
+rates: 
+:table cols='1i'.
+:tcap.Bauds
+:row.
+:c.300
+:row.
+:c.1200 
+:row.
+:c.2400 
+:row.
+:c.4800 
+:row.
+:c.9600 
+:row.
+:c.19200 
+:row.
+:c.38400 
+:row.
+:c.57600 
+:row.
+:c.115200 
+:etable.
+:p.For the following example, let's use :hp2.115200:ehp2. baud.
+If our clock
+:fn.This is :hp2.SYSCLK:ehp2. 
+:efn.
+defaults to 4 MHz, you can use the following formula to compute what 
+the clock divider needs to be:  
+:fig width=column place=inline frame=rules.
+:df align=center.baud = <F sub CLK> over <divider>
+:edf.
+ 
+:figcap.USART clock divider formula
+:efig.
+:p.Simply algebraically rearrange the formula to solve for whichever 
+value you need. So, if we enter 115200 baud as our baud rate and solve 
+for the divider, we get a mantissa of 34 and a fraction of 72. 
+:h3.Connecting the Pins 
+:p.You will want to check the device datasheet (see 
+:hdref refid=biblio.), and you will likely want to use :pv.USART1:epv.; 
+as such, your transmit pin will be PA9 and your receive pin will be 
+PA10. The alternate function for both of these will be AF7.
+:fn.You will have to use the second indexing of the :pk.GPIOx->AFR:epk. 
+register, so :pk.GPIOx->AFR&lbrk.1&rbrk.:epk..
+:efn.
+:h3.Send and Receive Functions 
+:h3.Receive Interrupts 
 :appendix.
 :bibliog id=biblio.
 :p.The following other books will be extensively useful in your studies:
@@ -4869,8 +4973,17 @@ C library in :pk.string.h:epk..
 :c.:hp1.n/a:ehp1.
 :c.Print a literal % character
 :etable.
+:h1 id=pnout.NUCLEO-L432KC Pinout 
+:p.Feel free to photocopy this image as much as you'd like! 
+:fig width=column place=inline frame=rules.
+:artwork name=nucleo43 align=center width=p360.
+ 
+:figcap.NUCLEO-L432KC Pinout
+:efig.
 :backm.
 :glossary.
+:p.Cross-references to other words that appear in the glossary are 
+placed in :hp1.italic!:ehp1.
 :gl.
 :grpsep.A
 :gt.Asynchronous
@@ -4896,6 +5009,9 @@ implements.
 to this value and then generate an event. See :hdref refid=timers. for 
 more information!
 :grpsep.B
+:gt.Baud rate 
+:gd.The baud rate is the number of :hp1.bits per second:ehp1. 
+transmitted on a serial link.
 :gt.Bouncing
 :gd.Unwanted jittering when a button is being pressed or released that 
 may result in excessive interrupt generation or unstable control signal 
@@ -4980,6 +5096,11 @@ requires only a clock and bidirectional data pin; this is a
 :gt.ISR
 :gd.Interrupt Service Routine, a function that the CPU jumps to 
 whenever an interrupt fires.
+:grpsep.L 
+:gt.Level shifter 
+:gd.This device converts the voltage levels of a serial communication 
+interface, like RS232, to something palatable for a microcontroller's 
+lower voltage levels.
 :grpsep.N
 :gt.NMI
 :gd.Non-Maskable Interrupt, an interrupt that cannot be disabled and is 
@@ -4989,6 +5110,10 @@ usually triggered when the device malfunctions.
 controller block found on :hp1.ARM Cortex-M:ehp1. series 
 microcontroller CPUs.
 :grpsep.P
+:gt.Parallel 
+:gd.Parallel communication involves sending all bits of a byte at the 
+same time on at least 8 data pins at some specified :hp1.clock;:ehp1. 
+the opposite of this is :hp1.serial:ehp1. resolution.
 :gt.PC
 :gd.Program Counter. This is the :hp1.register:ehp1. that holds the 
 memory address of the currently-executing CPU instruction.
@@ -5021,7 +5146,16 @@ program a microcontroller or computer system runs.
 :gd.32-bit high-speed fields within the CPU that is the fundamental 
 working storage for the CPU; see your notes from Computer Systems for 
 more information.
+:gt.RS232 
+:gd.A physical serial port on a PC or terminal uses the RS232 
+specification; the voltage levels switch between +15V and -15V to carry 
+the data stream. You must use a :hp1.level shifter:ehp1. to connect 
+this to a microcontroller.
 :grpsep.S
+:gt.Serial 
+:gd.Serial communication involves sending each bit of a byte 
+back-to-back at some pre-set :hp1.baud rate;:ehp1. the opposite of this 
+is :hp1.parallel:ehp1. communication.
 :gt.Single-ended
 :gd.If a signal is single-ended, it is carried on one wire and is also 
 more susceptible to noise. See :hp1.differential.:ehp1.

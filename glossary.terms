@@ -4,6 +4,7 @@ ADC
 AHB                                                                             
 APB                                                                             
 ARM                                                                             
+Baud rate                                                                       
 Bouncing                                                                        
 Breakpoint                                                                      
 Clock                                                                           
@@ -27,9 +28,11 @@ Interrupt
 IRQ                                                                             
 ISR                                                                             
 I2C                                                                             
+Level shifter                                                                   
 Masking                                                                         
 NMI                                                                             
 NVIC                                                                            
+Parallel                                                                        
 Prescaler                                                                       
 PC                                                                              
 PWM                                                                             
@@ -38,6 +41,8 @@ Register
 Resolution                                                                      
 RCC                                                                             
 ROM                                                                             
+RS232                                                                           
+Serial                                                                          
 Single-ended                                                                    
 Synchronous                                                                     
 SysTick                                                                         

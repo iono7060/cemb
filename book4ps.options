@@ -7,7 +7,7 @@ FPASSES(3)
 INDEX                                                                           
 MESSAGE(TRACE)                                                                  
 PAGE(FROM * TO *)                                                               
-SYSVAR(H NO  X NO  W USER  Q 1  G INLINE  U USER)                               
+SYSVAR(H NO  X NO  W USER  Q 1  G INLINE  U USER  0 COND)                       
 CONTINUE                                                                        
 @BOOKFNT(2)                                                                     
 @PSRES(HIGH)                                                                    

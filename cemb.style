@@ -20,14 +20,33 @@
 :zelement class=figcap                                                          
          center=yes.                                                            
                                                                                 
+:zshaddef.                                                                      
+:zshade  class=fig                                                              
+         weight=xlight.                                                         
+                                                                                
+:zshade  class=screen                                                           
+         weight=xlight.                                                         
+:ezshaddef.                                                                     
+                                                                                
+                                                                                
 :ezstyle.                                                                       
                                                                                 
                                                                                 
 :zstyle  proc=38PP                                                              
          refstyle=default.                                                      
                                                                                 
+:zlodef.                                                                        
+:zlayout name=offset                                                            
+         colpos=0.                                                              
+:ezlodef.                                                                       
                                                                                 
 :zelement class=figcap                                                          
          center=yes.                                                            
+                                                                                
+:zlodef.                                                                        
+:zlayout name=offset                                                            
+         colwidth='7.5i'                                                        
+         colpos=0.                                                              
+:ezlodef.                                                                       
                                                                                 
 :ezstyle.                                                                       
