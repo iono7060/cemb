@@ -13,6 +13,7 @@ Cortex-M
 CAN                                                                             
 Debounce                                                                        
 Debugger                                                                        
+Differential                                                                    
 Duty cycle                                                                      
 DAC                                                                             
 DMA                                                                             
@@ -32,9 +33,12 @@ NVIC
 Prescaler                                                                       
 PC                                                                              
 PWM                                                                             
+Quantization                                                                    
 Register                                                                        
+Resolution                                                                      
 RCC                                                                             
 ROM                                                                             
+Single-ended                                                                    
 Synchronous                                                                     
 SysTick                                                                         
 SPI                                                                             
