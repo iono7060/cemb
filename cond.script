@@ -1,1 +1,3 @@
 .setdvcf usecyn on                                                              
+.setdvcf dotipg off                                                             
+.setdvcf offset on                                                              

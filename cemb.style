@@ -28,6 +28,22 @@
          weight=xlight.                                                         
 :ezshaddef.                                                                     
                                                                                 
+:zheaddef.                                                                      
+:zhead   level=0                                                                
+         page=yes.                                                              
+:zhead   level=1                                                                
+         page=yes.                                                              
+:ezheaddef.                                                                     
+                                                                                
+.config noofst on                                                               
+.when 'not offset' insert                                                       
+:zlodef.                                                                        
+:zlayout name=offset                                                            
+         colpos=0p                                                              
+         colwidth=468p.                                                         
+:ezlodef.                                                                       
+.config noofst off                                                              
+                                                                                
                                                                                 
 :ezstyle.                                                                       
                                                                                 
@@ -35,18 +51,14 @@
 :zstyle  proc=38PP                                                              
          refstyle=default.                                                      
                                                                                 
-:zlodef.                                                                        
-:zlayout name=offset                                                            
-         colpos=0.                                                              
-:ezlodef.                                                                       
-                                                                                
 :zelement class=figcap                                                          
          center=yes.                                                            
                                                                                 
-:zlodef.                                                                        
-:zlayout name=offset                                                            
-         colwidth='7.5i'                                                        
-         colpos=0.                                                              
-:ezlodef.                                                                       
+:zheaddef.                                                                      
+:zhead   level=0                                                                
+         page=yes.                                                              
+:zhead   level=1                                                                
+         page=yes.                                                              
+:ezheaddef.                                                                     
                                                                                 
 :ezstyle.                                                                       
