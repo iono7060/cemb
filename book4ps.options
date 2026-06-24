@@ -1,0 +1,14 @@
+PROFILE(EDFPRF40)                                                               
+LIB(EDFMAC40)                                                                   
+DEV(PSA)                                                                        
+PSOUT(ASCII)                                                                    
+FILE                                                                            
+FPASSES(3)                                                                      
+INDEX                                                                           
+MESSAGE(TRACE)                                                                  
+PAGE(FROM * TO *)                                                               
+SYSVAR(H NO  X NO  W USER  Q 1  G INLINE  U USER)                               
+CONTINUE                                                                        
+@BOOKFNT(2)                                                                     
+@PSRES(HIGH)                                                                    
+@IBMLFONT(NO)                                                                   

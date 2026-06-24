@@ -1,0 +1,33 @@
+:zstyle  proc=PS                                                                
+         refstyle=default.                                                      
+                                                                                
+:zfontdef                                                                       
+         basefont='times roman'                                                 
+         headfont='helvetica'                                                   
+         tifont='helvetica'.                                                    
+                                                                                
+:zfont   class='pk'                                                             
+         weight=bold                                                            
+         face='bookmaster gothic'.                                              
+:zfont   class='pv'                                                             
+         face='bookmaster gothic'.                                              
+:zfont   class='table'                                                          
+         face='helvetica'.                                                      
+:zfont   class='table caption'                                                  
+         weight=bold                                                            
+         face='helvetica'.                                                      
+                                                                                
+:zelement class=figcap                                                          
+         center=yes.                                                            
+                                                                                
+:ezstyle.                                                                       
+                                                                                
+                                                                                
+:zstyle  proc=38PP                                                              
+         refstyle=default.                                                      
+                                                                                
+                                                                                
+:zelement class=figcap                                                          
+         center=yes.                                                            
+                                                                                
+:ezstyle.                                                                       

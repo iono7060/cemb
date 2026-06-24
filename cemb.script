@@ -1,0 +1,2760 @@
+:userdoc.
+:prolog.
+:docprof hyphen=yes justify=yes layout=1 tipage=center.
+:docprof toc='*5' style=cemb duplex=yes.
+:title stitle='C for Embedded Systems'.
+:library.An Easy Approach:
+:topic.C for Embedded Systems
+:etitle.
+:docnum.3040-3050-99
+:partnum.3040-99
+:filenum.CEMB
+:prtloc.Printed in Auburn
+:date.April 28, 2026
+:author.Evie Cooper
+.nameeps cmstype=eps pdsfull='wec.doc.eps'
+:artdef id=clogo name=clogo.
+:eprolog.
+:frontm.
+:tipage.
+:cover.
+:notices.
+Writing C programs for an embedded systems environment is
+significantly different from writing them to run under the control
+of an operating system, and this book provides a course on this
+very topic!
+ 
+No generative AI (ChatGPT, Gemini, Claude, etc) was used in the
+production of this book.
+:enotices.
+:vnotice.
+:vnhd.First Edition, Fall 20226
+:note.While this is intended to be a generic :q.C for embedded systems 
+primer,:eq. this book is :hp1.heavily:ehp1. targeted towards ELEC 
+3040/3050 and covers the prerequisite knowledge required in order to 
+succeed in this course.
+:coprnote.&copr. Evie Cooper 2026
+:coprext.For corrections or comments, please email 
+:pv.wec0007@auburn.edu:epv.!
+:evnotice.
+:preface.Preface
+:p.Often times, people hear about C and don't fully understand what all 
+it entails. C is a very :hp1.unusual:ehp1. language in the sense that 
+it's not well-suited for the writing of large applications (like, for 
+example, a web browser or a word processor like Microsoft Word) and is 
+more suited for core system programs and firmware.
+:p.In the past when computers were large, they were almost universally 
+programmed in some form of :hp5.assembly language:ehp5., but writing 
+entire large applications in assembler proved to be rather unwieldily.
+As a result, the mainframe-era assembler programmers employed tons of 
+helpful :hp1.macros:ehp1. to gradually relieve the typing requirements 
+of writing plain assembler code.
+:p.When C was arranged in the 1970s, it was intended to provide :q.one 
+step above assembler language:eq. and strike a balance between 
+assembler and a proper high-level language (which, in those days, were 
+languages like FORTRAN for math, COBOL for business applications, PL/I 
+for user applications, and a whole assortment of now-forgotten 
+languages for what C is used for now).
+:p.C originated from the :hp1.UNIX operating system:ehp1. and was 
+intended to be low-level enough that one could write machine-specific 
+code in C, but also write full applications like a text editor in it!
+The UNIX authors wanted to run their operating system on a variety of 
+computers with distinctly :hp1.different:ehp1. processors -- naturally, 
+these processors all used different assembler languages as they all 
+used different instruction-set architectures.
+:fn.The :hp2.ISA:ehp2. is a topic covered in great detail in the ELEC 
+5200/6200 Operating Systems course, but the short summary is this: the 
+ISA defines the CPU registers and the CPU instructions (and, therefore, 
+the way the assembler language looks).
+:efn.
+:p.As such, in this book, we will be examining C as a :hp2.high-level 
+assembler:ehp2. of sorts; the low-level configuration commands used on 
+an STMicroelectronics STM32 will not work on an Atmel AVR or any other 
+microcontroller.
+:fn.The Arduino line used to use AVRs heavily, but now includes other 
+CPU architectures thanks to high-level wrapper libraries like 
+:pv.Wiring:epv..
+:efn.
+Think of this like writing assembler programs with less typing!
+:p.Throughout this book, the following typing conventions will be used:
+:ul.
+:li.Program/variable/library name:
+:p.:pv.libc.a:epv.
+:li.Program keyword/function name:
+:p.:pk.switch:epk.
+:li.Source code:
+:xmp.int main()
+:exmp.
+:li.Key program function or idea:
+:p.:hp3.Debugging:ehp3.
+:li.Vocabulary word:
+:p.:hp2.3040/3050:ehp2.
+:li.Emphasis:
+:p.:hp1.Embedded:ehp1.
+:p.:hp5.Lab:ehp5.
+:li.Button:
+:p.:rk.Run:erk. 
+:eul.
+:toc.
+:figlist.
+:tlist.
+:body.
+:h0.Introduction
+:p.This section will provide some background information on the C 
+language and the environment in which your programs will run.
+:h1 id=environ.Understanding the C Environment
+:p.Before getting carried away writing programs, it is helpful to 
+understand the environment in which your programs are written and run.
+In the olden days, one would just run a command to run the C compiler 
+(since, likewise, in those olden days, computers were 
+command-line-based systems where you would just type in the name of a 
+program you want to run on a command prompt) like :pk.cc:epk. on 
+UNIX,:pk.cl:epk. on MS-DOS, so on and so forth; nowadays, we just click 
+the Run button and it somehow works!
+:h2.Compilation Process
+:p.However, it is :hp1.definitely:ehp1. helpful to understand what goes 
+on under the hood! When you click that Run (or Debug) button, the 
+following programs run in quick succession:
+:ol.
+:li.:hp2.Preprocessor::ehp2. this program resolves the 
+:hp1.preprocessor directives:ehp1. found in the program, like:
+:i1.Preprocessor
+:ul.
+:li.File inclusions
+:li.Macros
+:li.Conditional compilation
+:eul.
+:li.:hp2.Compiler::ehp2. this program will take the preprocessed source 
+code, then employ a technique that will translate the C into assembler 
+language. As such, the target CPU must be supported by the C compiler 
+program!
+:i1.Compiler
+:li.:hp2.Assembler::ehp2. now that the assembler source has been 
+produced by the compiler, this program will assemble it and store the 
+output in an :hp2.object file.:ehp2. 
+:i1.Assembler
+:li.:hp2.Linker::ehp2. if the project is comprised of multiple C files,
+:fn.Your STM32 C program projects will :hp1.always:ehp1. have multiple 
+files!
+:efn.
+the linker will combine all of the assembled object files into one 
+executable; it will also substitute in the memory addresses for 
+function calls, variable usages, and other such things. It also adds 
+:hp2.libraries:ehp2. into the program.
+:i1.Linker
+:eol.
+:p.The STM32CubeIDE uses the :hp2.GCC:ehp2. C compiler and contains a C 
+runtime library -- this library contains a variety of useful C library 
+functions that you may have used in the past if you are already 
+familiar with C.
+:p.If you click Run, the STM32CubeIDE will invoke a program that 
+flashes the firmware image file that the linker produced onto the board!
+:h3.About the Runtime Library
+:p.In the world of C programs that run under the control of an 
+:hp1.operating system,:ehp1. the C runtime library
+:fn.For the curious, this library is named :pv.libc.a:epv. 
+(:pv.libSystem.dylib:epv. on MacOS) on UNIX, and is split into three 
+libraries on Windows: :pv.user32.lib:epv., :pv.kernel32.lib:epv., and 
+:pv.gdi32.lib:epv..
+:efn.
+provides all manner of useful functions. You may recognize some of 
+these:
+:dl tsize=15.
+:dt.:pk.malloc():epk. 
+:dd.Allocate memory dynamically to a pointer
+:dt.:pk.fopen():epk. 
+:dd.Open a disk file
+:dt.:pk.fread():epk. 
+:dd.Read data from a disk file
+:dt.:pk.fwrite():epk. 
+:dd.Write data to a disk file
+:dt.:pk.fclose():epk. 
+:dd.Close a disk file
+:dt.:pk.system():epk. 
+:dd.Run a system command (any shell/terminal command)
+:dt.:pk.exit():epk. 
+:dd.Leave the program and return to the shell or file browser
+:edl.
+:p.Unfortunately, :hp5.you cannot use any of these in your STM32 
+programs!:ehp5. Because the STM32 isn't running an operating system, 
+none of the above functions will work.
+:fn.Granted, there is a :pk.malloc():epk. function, but it works 
+:hp1.completely differently:ehp1. on the STM32 than it does on an 
+operating system!
+:efn.
+:p.We will explore these runtime library functions later, but they will 
+not be amazingly useful. Since this book may also be useful for those 
+building their Capstone projects, understanding the library functions 
+used for manipulating :hp2.strings:ehp2. will certainly help if you 
+wish to have any textual output from your microcontroller (perhaps over 
+a serial port or an external character display).
+:h2.Debugging Process
+:p.When you click on that :rk.Run:erk. or :rk.Debug:erk. button, 
+STM32CubeIDE will invoke the above build process, but will then execute 
+other tasks based on which of the two buttons you clicked:
+:ul.
+:li.:rk.Run:erk.
+:ol.
+:li.Microcontroller is reset
+:li.Microcontroller is erased
+:li.Program is flashed onto the microcontroller
+:fn.By way of the ST-Link chip, found on the underside of the 
+STM32L432KCU series boards and found at the top of the STM32F4xxx 
+series boards
+:efn.
+:li.Microcontroller is reset
+:eol.
+:li.:rk.Debug:erk.
+:ol.
+:li.Microcontroller is reset
+:li.Microcontroller is erased
+:li.Program is flashed onto the microcontroller
+:li.Microcontroller is reset into trace mode
+:li.ST-Link debugger chip starts communicating with :pv.gdb:epv. on 
+your computer
+:li.The microcontroller CPU is stalled at the reset vector, awaiting 
+the clicking of the :rk.Continue:erk. button
+:eol.
+:eul.
+:h2.Object Files and Library Files
+:p.The assembler will create object files, which are special files that 
+contain a header followed by one or more groups of :hp1.machine 
+code:ehp1. and :hp1.data.:ehp1. Any references to variables and 
+functions, however, will be left as :q.blanks:eq. to be filled in by 
+the linker later (since the linker will know about the memory address 
+requirements of either the target microprocessor or operating system).
+:i1.Object File
+:p.Likewise, one can also create a :hp2.library:ehp2. that contains 
+several object files in some kind of collection -- you can then pass 
+one of these to the linker and it will automatically fetch variable 
+references and functions out of the library collection just as if you 
+passed many object files to it.
+:i1.Library File
+:p.The C runtime library (which provides functions 
+like:pk.strcpy:epk.,:pk.memset:epk., and such) is also a, as the name 
+implies, a library file linked with every program!
+:h0.C Language Primer
+:p.This section will provide a basic primer on the C language, syntax, 
+and provide some basic code examples that do not require any 
+STM32-specific features -- those features will be explored in the next 
+section following this one!
+:h1.Basic C Syntax
+:p.Before learning more advanced topics, let us first understand the 
+basic C program structure!
+:h2.Comments
+:p.A :hp2.comment:ehp2. is a portion of the code that is not compiled; 
+it provides you a way to put some textual blurbs in your program
+:i1.Comments
+:p.You should :hp1.always:ehp1. comment your code! In C, there are two 
+ways to define comments, as shown here:
+:fig width=column place=inline frame=rules.
+:xmp.
+// This is a simple single-line comment.
+ 
+/* This is a different way to do a single-line comment. */
+/* This can also be a
+   multi-line comment! */
+:exmp.
+:figcap.Example comments
+:efig.
+:lblbox.Why are there two comment types?
+:p.In the :q.olden days:eq. of C (like the original K&R C or C89, often 
+called :hp1.ANSI C:ehp1.), you could only use the multiline comment 
+form!
+:p.When C++ came about in the late 1980s, the language designers came 
+up with the :pv.//:epv. single-line comment form to alleviate the need 
+to type an ending :pv.*/:epv. on every comment.
+:p.As one might gather from this, there are :hp2.different versions of 
+C!:ehp2.
+:ul.
+:li.K&R C, from the 1970s
+:li.C89, from 1989 (ANSI C, the most commonly-implemented C in embedded 
+compilers)
+:li.C99, from 1999
+:li.C11, from 2011
+:li.C23, from 2023 (our STM32CubeIDE C compiler does not support any of 
+these features, and they aren't useful to us)
+:eul.
+:elblbox.
+:h2 id=vars.Defining Variables
+:p.The simplest thing we can do in a C program is to define some 
+:hp2.variables;:ehp2. once we learn how to do this, we will define some 
+:hp2.functions:ehp2. (which are just blocks of code that optionally 
+return a variable -- if this seems confusing now, it will become clear 
+soon).
+:p.In C, variables are known by their name and their associated 
+:hp1.type.:ehp1. :hp5.The type defines how much memory a variable will 
+use!:ehp5. C has the following types:
+:ih1.Data types
+:ul.
+:li.:hp2.integral types:ehp2. which are useful for storing numbers:
+:i2.Integral types (char, short, int, long)
+:ul.
+:li.:pk.char:epk. -- 8-bit
+:li.:pk.short:epk. -- 16-bit
+:li.:pk.int:epk. -- 32-bit
+:li.:pk.long:epk. -- also 32-bit
+:fn.The reason that :pk.long:epk.s are 32 bits on the STM32 is because 
+the STM32 is a 32-bit ARM CPU (something you probably remember from 
+Computer Systems class)
+:efn.
+ 
+:eul.
+:li.:hp2.Floating-point types:ehp2. for decimal values:
+:i2.Floating-point types (float, double)
+:ul.
+:li.:pk.float:epk. -- basic IEEE-754 floating-point type (32 bits)
+:li.:pk.double:epk. -- double-precision floating-point (64 bits)
+:eul.
+:li.:hp2.Pointer types:ehp2. used to reference objects in memory (this 
+will be discussed in great detail later, as these are a difficult topic 
+for new C programmers)
+:i2.Other types
+:li.:hp2.Array types:ehp2. which hold a collection of various items all 
+of the same type
+:li.:hp2.Structure types:ehp2. which allow you to create singular types 
+that hold several sub-variables
+:li.The special :hp2.void type:ehp2. used primarily in a function when 
+the function has no return type
+:eul.
+:p.You should also note that the :hp1.integral types:ehp1. can be 
+:hp2.signed:ehp2. or :hp2.unsigned:ehp2., wherein you can choose 
+whether or not the C compiler will support the usage of negative values 
+on a variable or not.
+:i1.Signed
+:i1.Unsigned
+:p.By default, variables are signed unless prefixed by 
+the:pk.unsigned:epk. keyword. Here are some example variable 
+definitions:
+:fig width=column place=inline frame=rules.
+:xmp.
+int myNumber;            // no defined default value
+int otherNumber = 12;    // defaults to 12
+float result = 12.34;    // a decimal value
+unsigned short val;      // example of an unsigned value
+:exmp.
+ 
+:figcap.Single variable definitions
+:efig.
+:p.We will look at actually :hp1.using:ehp1. these variables in a 
+future segment.
+:h3 id=c99type.C99 Datatypes
+:p.The STM32CubeIDE C compiler (GCC) supports the :hp3.C99:ehp3. 
+version of C, and therefore lets us use specific variable datatypes 
+that have a certain number of bits contained within them (and can 
+optionally be signed).
+:p.In order to use these, you will need to have the :pk.#include 
+<stdint.h>:epk. statement at the top of your program; for more on these 
+:hp1.preprocessor directives,:ehp1. see :hdref refid=preproc..
+:ih1.C99 datatypes
+:i2.uint*
+:i2.int*
+:table cols='1i 1i 1i'.
+:tcap.C99 Datatypes
+:thd.
+:c.:hp2.Type:ehp2.
+:c.:hp2.Bits:ehp2.
+:c.:hp2.Signed:ehp2.
+:ethd.
+:row split=yes.
+:c.:pk.uint8_t:epk.
+:c.8
+:c.yes
+:row split=yes.
+:c.:pk.int8_t:epk.
+:c.8
+:c.no
+:row split=yes.
+:c.:pk.uint16_t:epk.
+:c.16
+:c.yes
+:row split=yes.
+:c.:pk.int16_t:epk.
+:c.16
+:c.no
+:row split=yes.
+:c.:pk.uint32_t:epk.
+:c.32
+:c.yes
+:row split=yes.
+:c.:pk.int32_t:epk.
+:c.32
+:c.no
+:row split=yes.
+:c.:pk.uint64_t:epk.
+:c.64
+:c.yes
+:row split=yes.
+:c.:pk.int64_t:epk.
+:c.64
+:c.no
+:etable.
+:h2 id=sizeof.Getting the Size of Variables
+:p.C has a special keyword, :pk.sizeof:epk. that functions somewhat 
+like a variable that the compiler will see and replace with the size of 
+a variable's memory. You can use this whenever you need to find out how 
+big a compound type is (like a :pv.struct:epv. or :pv.union:epv., which 
+we will discuss later)!
+:p.Usage is as follows:
+:fig width=column place=inline frame=rules.
+:xmp.
+int myNumber;
+int numSize = sizeof(myNumber);
+int intSize = sizeof(int);
+:exmp.
+ 
+:figcap.sizeof example
+:efig.
+:p.The first :pv.sizeof:epv. computes the size of the named variable, 
+and the second one computes the size of the generic :pk.int:epk. type.
+:h2 id=arrays.Defining Arrays
+:p.Arrays in C are :hp5.fixed-size:ehp5. and may or may not have 
+default values (just like shown above in the code example for single 
+variable definitions).
+:i1.Array
+:p.Please note that arrays are closely related to a special C data type 
+called a :hp2.pointer:ehp2.; see :hdref refid=ptrs. for more 
+information. Please familiarize yourself with the basics in this 
+section before getting overwhelmed by pointers, since they are a 
+notorious stumbling block for novice C programmers!
+:p.You declare arrays like this:
+:fig width=column place=inline frame=rules.
+:xmp.
+int numbers&lbrk.32&rbrk.;
+unsigned char smallValues&lbrk.10&rbrk.;
+:exmp.
+ 
+:figcap.Arrays without initialization
+:efig.
+:h3.Array Initialization
+:p.Of course, none of these arrays have any default value
+:fn.As a matter of fact, these arrays not only have no default value, 
+but will be filled with :hp1.random values:ehp1. that correspond to the 
+uncleared reset state of the microcontroller's RAM!
+:efn.
+that is useful. As such, there are several ways of actually 
+initializing an array:
+:i2.Initialization
+:ol.
+:li.:hp2.Immediate Values:ehp2.
+:p.This is the easiest way to initialize an array:
+:xmp.
+int myNumbers&lbrk.&rbrk. = &lbrc.
+    5, 10, 15, 20, 25, 30
+&rbrc.;
+:exmp.
+:note.Note that the array size is not present within the square 
+brackets -- this array initialization scheme will automatically size 
+the array to the number of elements that you type in.
+:li.:hp2.String Initialization:ehp2.
+:p.Use this format when you are defining a string (which uses the 
+:pv.char:epv. type)
+:xmp.
+char myString&lbrk.&rbrk. = "Demo string";
+:exmp.
+:li.:hp2.Automatic Zero:ehp2.
+:p.When defining an array that you will use later, it is a good idea to 
+:hp1.zero the memory:ehp1. it will end up using:
+:xmp.
+int myNumbers&lbrk.10&rbrk. = &lbrc. 0 &rbrc.;
+:exmp.
+:li.:hp2.Designated Initializers:ehp2.
+:p.Use this feature to assign array values at specific locations in the 
+array:
+:i3.Designated Initializer
+:xmp.
+int otherNumbers&lbrk.10&rbrk. = &lbrc.
+    &lbrk.5&rbrk. = 5,
+    &lbrk.7&rbrk. = 9
+&rbrc.
+:exmp.
+:note.This is a C99 feature.
+:eol.
+:h2 id=structs.Defining Structures
+:p.If you've taken courses on Java in the past (which you will have 
+done so if you are a computer engineer), you will be familiar with 
+:hp1.classes:ehp1. and all that they entail; A :pv.struct:epv. in C is 
+passingly similar to a class that contains only variables.
+:i1.Structures (struct)
+:p.For those that are confused, a :pv.struct:epv. will let you create a 
+:hp5.compound type:ehp5. that itself is a custom data type that 
+contains several other variables within it.
+:p.Structs are defined as follows, and then instantiated as follows:
+:fig width=column place=inline frame=rules.
+:xmp.
+struct MyStruct {              // declare the struct type
+    int a;                     // members of the struct...
+    char b;
+    float c;
+};
+ 
+struct MyStruct myInstance;    // instantiate the struct
+:exmp.
+ 
+:figcap.Structure definition and instantialization
+:efig.
+:p.Now, some C programmers will choose to use the :pk.typedef:epk. 
+keyword to avoid the need to type :pv.struct:epv. every time the 
+structure type is referenced. You can use the :pv.typedef:epv. keyword 
+like this:
+:i2.typedef
+:fig width=column place=inline frame=rules.
+:xmp.
+typedef struct {               // declare the struct type
+    int a;                     // members of the struct...
+    char b;
+    float c;
+} MyStruct;
+ 
+MyStruct myInstance;           // instantiate the struct
+:exmp.
+ 
+:figcap.Structure typedef usage
+:efig.
+:p.You can write code like this that actually uses a :pv.struct:epv.:
+:fig width=column place=inline frame=rules.
+:xmp.
+struct MyStruct {
+    int a;
+    char b;
+    float c;
+};
+ 
+struct MyStruct myInstance;
+ 
+// later on, in a function:
+myInstance.a = 5;
+myInstance.c = 12.34;
+:exmp.
+ 
+:figcap.Structure usage
+:efig.
+:h2 id=unions.Defining Unions
+:p.When you are in a union, you are in a group with other people.
+A:pk.union:epk. in C is of a similar idea, except it stores several 
+variables overlapping in the same memory space! These have very 
+specific uses and are :hp5.not:ehp5. :pv.struct:epv. types, and you 
+will likely not need to use these unless you are reading in data sent 
+by some external sensor.
+:i1.union
+:p.The syntax is like this:
+:fig width=column place=inline frame=rules.
+:xmp.
+union Tester {                 // declare the union
+    int a;                     // members of the union
+    char b;
+    float c;
+} MyStruct;
+ 
+union Tester myDemo;           // instantiate the union
+:exmp.
+ 
+:figcap.Union definition syntax
+:efig.
+:p.Unions are used just like structures, but remember that altering one 
+of the :q.members:eq. of the union alters the value of every other 
+member!
+:h2 id=enums.Defining Enumerations
+:p.An enumeration, or :pk.enum:epk. for short, allows you to assign 
+user-written names to integer constants. These are particularly useful 
+where you may have a variety of numbers that refer to the state of a 
+program, but do not wish to recall a number corresponding to every 
+state.
+:i1.enum
+:p.The syntatx to define an :pv.enum:epv. is as follows:
+:fig width=column place=inline frame=rules.
+:xmp.
+enum States {
+    WAITING, READING, WRITING, CRASHING
+};
+ 
+enum States myProgramState;
+ 
+// later on in a function:
+myProgramState = WAITING;
+:exmp.
+ 
+:figcap.Enum definition and usage syntax
+:efig.
+:lblbox.Enum Name Limit
+:p.Please note something :hp2.extremely important:ehp2. when using 
+:pv.enums:epv.: you can only have one occurrence of every word in your 
+program!
+:p.In other words, you can't define two :pv.enums:epv. that both have 
+a:pk.WAITING:epk. enumerator!
+:elblbox.
+:h2 id=ltrls.Extra Immediate Types
+:p.Throughout the examples we have seen so far, the variables have been 
+defined as :hp1.plain signed integers:ehp1. or :hp1.character 
+strings.:ehp1. In reality, there are many other ways of defining 
+so-called :hp2.literals,:ehp2. the value that we assign a variable to 
+equal:
+:ih1.Immediate types
+:ul.
+:li.:hp2.Signed decimal&colon.:ehp2. 
+:i2.Decimal
+:xmp.int x = 5;
+:exmp.
+:li.:hp2.Unsigned decimal&colon.:ehp2. 
+:fn.This employs a :hp2.cast:ehp2., which will be described in more 
+detail later.
+:efn.
+:xmp.unsigned int y = (unsigned int) 1231431;
+:exmp.
+:li.:hp2.Hexadecimal&colon.:ehp2. 
+:i2.Hexadecimal
+:xmp.unsigned short demo = 0xAD52;
+:exmp.
+:li.:hp2.Binary&colon.:ehp2. 
+:i2.Binary
+:xmp.unsigned char keyValue = 0b11110000;
+:exmp.
+:li.:hp2.Octal&colon.:ehp2. 
+:i2.Octal
+:xmp.short testing = 0177;
+:exmp.
+:li.:hp2.Explicit :pk.long:epk.&colon.:ehp2. 
+:i2.Long
+:xmp.long myVar = 5423762L;
+:exmp.
+:li.:hp2.Single character:&colon.:ehp2. 
+:i2.Character
+:xmp.char val = 'a';
+:exmp.
+:li.:hp2.Character string&colon.:ehp2. 
+:i2.String
+:xmp.
+char string&lbrk.&rbrk. = "This is a test";
+:exmp.
+:eul.
+:h2 id=funcs.Defining Functions
+:p.In C, a :hp2.function:ehp2. is where your actual code goes -- to 
+this point, we haven't actually written a line of code that results in 
+the CPU having to do :hp1.anything!:ehp1. 
+:i1.Function
+:p.Let us start simple and create a :pk.void:epk. function that returns 
+nothing, and simply performs addition within it:
+:fig place=inline width=column frame=rules.
+:xmp.
+void myFunc() &lbrc.
+    int a;       // declare a variable within the function
+ 
+    a = 5;       // assign a value to the variable
+    a = a + 2;   // add 2 to the variable
+ 
+&rbrc.
+:exmp.
+ 
+:figcap.Basic function with no parameters or return
+:efig.
+:p.Something important to note is the critical concept of :hp2.variable 
+scope:ehp2. -- this is the term that refers to the regions wherein, if 
+you declare a variable, it can be used later. The general way to 
+remember this is:
+:i2.Scope
+:lq.
+:p.Variables declared within the body of a function will not be usable 
+outside of the function, and variables declared outside of any function 
+(such as at the top of the C source file) will be usable by 
+:hp1.any:ehp1. function (and may be modified by any function too). :elq.
+:p.Take the following function example that references variables that 
+are :hp5.out-of-scope:ehp5.:
+:fig width=column place=inline frame=rules.
+:xmp.
+void function1() {
+    int x = 5;             // declare x
+    x++;                   // increment x by 1
+}
+ 
+void function2() {
+    x = 12;                // x is not in the scope
+}
+:exmp.
+:figcap.Out-of-scope variable usage demonstration
+:efig.
+:p.The assignment of :pv.x:epv. in the second function will result in 
+the displaying of a syntax error message by the compiler!
+:h3 id=return.Return Types
+:p.A function can also have a :hp2.return type:ehp2. -- the above 
+examples use the :pk.void:epk. return type, which means there is 
+:hp1.no:ehp1. return type. It is best to examine the syntax to define a 
+function with a return type through example:
+:i2.Return type
+:fig width=column place=inline frame=rules.
+:xmp.
+int giveNumber() {
+    return 5;
+}
+:exmp.
+ 
+:figcap.Return-type function definition
+:efig.
+:lblbox.Returning Arrays
+:p.Many novices wonder if they can return arrays. You can, but you 
+cannot return :hp2.immediate arrays:ehp2., and you are really returning 
+a :hp2.pointer.:ehp2. One may imagine a function like this:
+:xmp.
+char* giveString() {
+    return "This is a sample";
+}
+:exmp.
+:p.This will, however, :hp1.not:ehp1. work at all -- the value returned 
+from the :pv.giveString():epv. function will actually be the memory 
+address of the :pv."This is a sample":epv. string. This will result in 
+the clobbering of the return address on the stack, resulting in a 
+program hang.
+:p.If this is confusing, don't worry! Just remember to not ever try to 
+return an array!
+:elblbox.
+:h3.Function Parameters
+:p.Functions can also have :hp2.parameters:ehp2. that allow you to pass 
+immediates and variables into a function. If you pass a variable, its 
+contents will be :hp1.copied:ehp1. into the function; as such, the 
+value passed into the function should not be modified. To modify a 
+value, you will need to use a pointer (which will be described later).
+:i2.Parameters
+:p.Here are a few function definitions that take parameters:
+:fig width=column place=inline frame=rules.
+:xmp.
+int addTogether(int a, int b) {
+    return a + b;
+}
+ 
+int addThree(int numbers&lbrk.&rbrk.) {
+    return numbers&lbrk.0&rbrk. + numbers&lbrk.1&rbrk. + numbers&lbrk.2&rbrk.;
+}
+ 
+struct MyStruct {
+    int intInStruct;
+};
+ 
+ 
+int extractStruct(struct MyStruct entry) {
+    return entry.intInStruct;
+}
+:exmp.
+ 
+:figcap.Functions with parameters (also array and structure)
+:efig.
+:h3 id=callfnc.Calling Functions
+:p.The point of functions is to :hp2.call:ehp2. them, or invoke them.
+Functions with no return type
+:fn.That is, the :pk.void:epk. type.
+:efn.
+are called slightly differently than functions with a return type.
+:p.Here is a sample of calling some functions :hp1.without:ehp1. return 
+types:
+:fig width=column place=inline frame=rules.
+:xmp.
+void callee() {
+    // this function body would do something
+}
+ 
+void caller() {
+    callee();                        // call the function
+}
+:exmp.
+ 
+:figcap.Return-type function definition
+:efig.
+:p.Here is a sample of calling some functions with return types:
+:fig width=column place=inline frame=rules.
+:xmp.
+int addTogether(int a, int b) {
+    return a + b;
+}
+ 
+int addThree(int numbers&lbrk.&rbrk.) {
+    return numbers&lbrk.0&rbrk. + numbers&lbrk.1&rbrk. + numbers&lbrk.2&rbrk.;
+}
+ 
+void callThem() {
+    int sum;                         // will hold the sum
+ 
+    sum = addTogether(2, 4);         // immediate parameters
+ 
+    int num1 = 8;
+    int num2 = 16;
+    sum = addTogether(num1, num2);   // variable parameters
+ 
+    int numbers&lbrk.&rbrk. = {5, 10, 15};     // our array
+    sum = addThree(numbers);         // array parameter
+}
+:exmp.
+ 
+:figcap.Calling functions with return types
+:efig.
+:h3.The Main Function
+:p.Your program will :hp5.always:ehp5. start with a function 
+named:pk.main:epk., with an :pv.int:epv. return type. This is defined 
+as follows:
+:fig width=column place=inline frame=rules.
+:xmp.
+void somecode() {
+    // this function body would do something
+}
+ 
+int main() {                         // program starts here
+    somecode();
+}
+:exmp.
+ 
+:figcap.Main function definition
+:efig.
+:p.No matter how complicated your program may be, it will 
+:hp5.always:ehp5. start in the main function -- this cannot be changed!
+:h1 id=control.Flow Control
+:p.Inevitably, in the course of writing your program, you will want to 
+add in :hp1.branches:ehp1. for decision-making. In C, you have a 
+variety of :hp5.control flow statements:ehp5. you can write into your 
+program:
+:ul.
+:li.:pk.if:epk. statements, for checking the status of one or more 
+variable and running a block of code :hp1.once:ehp1.
+:li.:pk.while:epk. statements, for repeatedly checking the status of 
+one or more variables and running a block of code :hp1.once or more 
+than once:ehp1.
+:li.:pk.switch/case:epk. statements, for making a :q.lookup table:eq. 
+and running a small amount of code :hp1.once:ehp1. 
+:eul.
+:h2 id=ifstmt.If Statements
+:p.The simplest of the control flow statements is the first one in the 
+above list, the :pk.if:epk. statement. This statement is of the 
+following syntax:
+:i1.if
+:fig width=column place=inline frame=rules.
+:xmp.
+if(100 > 10) {  // this is the "condition"
+    // this code will always run
+}
+:exmp.
+ 
+:figcap.Example if statement definition
+:efig.
+:p.This can, of course, be more complex; please see 
+:hdref refid=elseif..
+:h3.Conditions
+:p.The :hp2.condition:ehp2. within the :pk.if:epk. statement body 
+contains a comparison operation, which are of the following forms:
+:i2.Conditions
+:dl tsize=15.
+:dt.:pk.a == b:epk. 
+:dd.Does :pv.a:epv. equal :pv.b:epv.?
+:dt.:pk.a != b:epk. 
+:dd.Does :pv.a:epv. not equal :pv.b:epv.?
+:dt.:pk.a < b:epk. 
+:dd.Is :pv.a:epv. less than :pv.b:epv.?
+:dt.:pk.a > b:epk. 
+:dd.Is :pv.a:epv. greater than :pv.b:epv.?
+:dt.:pk.a <= b:epk. 
+:dd.Is :pv.a:epv. less than or equal to :pv.b:epv.?
+:dt.:pk.a >= b:epk. 
+:dd.Is :pv.a:epv. greater than or equal to :pv.b:epv.?
+:dt.:pk.a:epk. 
+:dd.Is :pv.a:epv. greater than :pv.0:epv.?
+:edl.
+:p.
+:p.The condition may use one or two constants or variables.
+:fn.If this is confusing: you can compare a variable against a 
+constant, two variables against each other, or two constants against 
+each other (this is very rarely done, though)
+:efn.
+:h3.Multiple Conditions/Logical Operators
+:p.In addition to having a single condition statement, you can also 
+have :hp1.several:ehp1. condition statements if you choose to use 
+:hp2.logical operators:ehp2. like these:
+:i2.Logical Operators
+:dl tsize=15.
+:dt.:pk.a && b:epk. 
+:dd.And
+:dt.:pk.a || b:epk. 
+:dd.Or
+:dt.:pk.a ! b:epk. 
+:dd.Not
+:edl.
+:i2.Logical Operators
+:p.You would use them like this:
+:fig width=column place=inline frame=rules.
+:p.And:
+:xmp.
+if((a == b) && (c != d)) {
+    // use parenthesis adequately to avoid confusion!
+}
+:exmp.
+:p.Or:
+:xmp.
+if(a == b) || c) {
+    // this is if a equals b and c is greater than zero
+}
+:exmp.
+:p.Not:
+:xmp.
+if(!a && !(b < c)) {
+    // the distributive property applies, like DeMorgan's Theorem
+}
+:exmp.
+ 
+:figcap.If statements with logical operators
+:efig.
+:h3 id=elseif.Else-If Statements
+:p.Inevitably, you may want to have a decision that has more than one 
+exit (up to this point, all of the statements we have looked at contain 
+only one exit) -- you can create these by using the :pk.else if:epk. 
+and :pk.else:epk. statements.
+:i2.else If
+:i2.else
+:p.This looks like this:
+:fig width=column place=inline frame=rules.
+:xmp.
+if(decision1) {
+    // this code runs if "decision1" is true
+}
+else if(decision2) {
+    // this code runs if "decision2" is true
+}
+else if(decision3) {
+    // this code runs if "decision3" is true
+}
+else {
+    // this runs if none of the above decisions are true
+}
+:exmp.
+ 
+:figcap.Full If statement definition
+:efig.
+:p.The purpose of :pk.else if:epk. and :pk.else:epk. is to allow you to 
+have a :hp1.multiple-way-out decision:ehp1. given a single :pk.if:epk. 
+statement.
+:h2 id=while.While Statements
+:p.If you want to create a :hp3.loop,:ehp3. you will want to use 
+a:pk.while:epk. loop (or a :pk.for:epk. loop, described in 
+:hdref refid=forloop.).
+:i1.while
+:p.A :pk.while:epk. loop will execute a block of code as long as a 
+given :hp1.condition:ehp1. (just like in an :pk.if:epk. statement) 
+remains true. By default, the code is ran :hp5.after:ehp5. the 
+condition check, but we will examine a version of a :pk.while:epk. 
+statement that runs the code :hp5.before:ehp5. the check.
+:p.The syntax of a :pk.while:epk. statement is as follows:
+:fig width=column place=inline frame=rules.
+:xmp.
+int a = 1;
+ 
+while(a == 1) {
+    if(key == 12345) {
+        a = 0;
+    }
+    // run this forever until the "key" is set to 12345 elsewhere
+}
+:exmp.
+:figcap.While statement definition
+:efig.
+:p.In order to construct a :hp3.loop:ehp3., you can have an inequality 
+check for the condition statement:
+:fig width=column place=inline frame=rules.
+:xmp.
+int a = 0;
+ 
+while(a < 10) {
+    // code here will run 10 times
+    a--;
+}
+:exmp.
+:figcap.While statement loop
+ 
+:efig.
+:p.In this example, :pv.a++:epv. increments the variable :pv.a:epv. by 
+one. :hp2.For more information,:ehp2. see :hdref refid=math.. :hp5.You 
+will probably want to go read that section and then come back!:ehp5.
+:p.A :pk.while:epk. statement runs forever as long as the statement is 
+:q.true.:eq. 
+:fn.In C, a statement is :q.true:eq. as long as it evaluates to a value 
+that isn't zero. As such, :pv.while(1):epv. will result in an infinite 
+loop!
+:efn.
+:h3.Premature Exiting
+:p.If at any point you wish to either :hp1.exit from a loop:ehp1. or 
+:hp1.jump to the next iteration:ehp1., you can use the following two 
+keywords to do this:
+:i1.break
+:i1.continue
+:ul.
+:li.:pk.break:epk.
+:li.:pk.continue:epk. 
+:eul.
+:p.Here is a complex :pv.while:epv. loop that uses both of these:
+:fig width=column place=inline frame=rules.
+:xmp.
+int a = 0;
+ 
+while(a < 10) {
+    if(a == 5) {
+        break;              // leave early on the 5th run
+    }
+    if(a == 6) {
+        continue;
+    }
+    a++;                    // increment the loop counter
+}
+:exmp.
+:figcap.While loop with break/continue
+:efig.
+:h2 id=dowhile.Do-While Loops
+:p.If you wish to construct a loop that :hp1.runs code first:ehp1. then 
+checks the condition, you can use a :pk.do-while:epk. loop. The syntax 
+is relatively similar to a standard :pv.while:epv. loop:
+:i1.do
+:fig width=column place=inline frame=rules.
+:xmp.
+int a = 0;
+ 
+do {
+    something();
+    a++;
+} while(a < 10);
+:exmp.
+:figcap.Do-while loop example
+:efig.
+:h2 id=forloop.For Statements
+:p.The purpose of a :pk.for:epk. statement is primarily to construct 
+loops that will run for a specific number of cycles, or until a certain 
+condition has been met; it provides a more feature-rich version of 
+a:pk.while:epk. statement. The syntax is follows:
+:i1.for
+:fig width=column place=inline frame=rules.
+:xmp.
+void forDemo() {
+    for(variable; condition; increment) {
+        // this is the body
+    }
+}
+:exmp.
+ 
+:figcap.For statement definition
+:efig.
+:p.The three parts of the :pk.for:epk. statement are as follows:
+:ol.
+:li.:pk.variable:epk. defines the reset term for the variable; this 
+sets the variable that counts how many iterations the loop runs to the 
+starting value. With C99, you can also :hp1.define:ehp1. the variable 
+and its associated type here.
+:p.Example: :pv.i = 0:epv.
+:li.:pk.condition:epk. is the condition statement that specifies when 
+the loop will stop running. This is the same as what you would find in 
+a :pk.while:epk. statement.
+:p.Example: :pv.i < 10:epv.
+:li.:pk.increment:epk. specifies a single line of code that will run 
+to, usually, increase the variable (though you can also call a function 
+that increments the variable).
+:p.Example: :pv.i++:epv. 
+:eol.
+:p.In this example, :pv.i++:epv. increments the variable :pv.i:epv. by 
+one. :hp2.For more information,:ehp2. see :hdref refid=math.. :hp5.You 
+will probably want to go read that section and then come back!:ehp5. 
+:lblbox.Too Many Semicolons!
+:p.Interestingly enough, you can actually :hp1.omit:ehp1. any of the 
+terms within a :pk.for:epk. loop. This is actually one of the ways you 
+can create an infinite loop! It looks like this:
+:xmp.for(;;) {
+    // body
+}
+:exmp.
+:elblbox.
+:p.Putting it all together, here are sample :pk.for:epk. statements:
+:fig width=column place=inline frame=rules.
+:xmp.
+void forDemo() {
+    int i;
+    int sum;
+ 
+    // basic for loop with a predefined variable
+    for(i = 0; i < 10; i++) {
+        sum = sum + i;
+    }
+ 
+    // for loop with a variable defined in-statement
+    for(int j = 10; j > 0; j--) {
+        sum = sum - j;
+    }
+    // for loop with a dropped incrementor
+    for(int k = 0; k < 10;;) {
+        sum = sum + k;
+        k++;
+    }
+}
+:exmp.
+ 
+:figcap.For statement examples
+:efig.
+:h2 id=switch.Switch Statements
+:p.Rather than having tons of back-to-back :pk.else if:epk. statements, 
+you can use a :pk.switch:epk. statement to streamline the process!
+:i1.switch
+:i2.case
+:p.A :pk.switch:epk. statement is contains a :q.body:eq. that itself 
+has one or more :pk.case:epk. statements that actually perform actions.
+The definition is as follows:
+:fig width=column place=inline frame=rules.
+:xmp.
+void caseDemo() {
+    switch(myVariable) {
+    case 1:
+        doFunction1();
+        break;
+    case 2:
+        doFunction2();
+        break;
+    case 3:
+    case 4:
+        doFunction3and4();
+        break;
+    default:
+        doFunctionOthers();
+    }
+}
+:exmp.
+ 
+:figcap.Switch/case statement definition
+:efig.
+:p.The purpose of the :pk.break:epk. statement is to provide an 
+:hp2.exit:ehp2. from the :pk.case:epk. block it is found in. If you 
+forget to code in the :pk.break:epk. statements for your:pk.case:epk.s, 
+you will end up accidentally running every code block for every case!
+You can, of course, do some interesting things with this -- see the 
+call to :pv.doFunction3and4():epv. for an example of two back-to-back 
+cases that result in the same code chunk being executed.
+:h1 id=math.Math Operations
+:h2.Arithmetic Operations
+:p.Though you saw variable addition in :hdref refid=callfnc., you may 
+also wish to know the other arithmetic operations that you can perform.
+Here is a list of them:
+:i1.Arithmetic
+:dl tsize=15.
+:dt.:pk.a + b:epk. 
+:dd.Addition
+:dt.:pk.a - b:epk. 
+:dd.Subtraction
+:dt.:pk.a * b:epk. 
+:dd.Multiplication
+:dt.:pk.a / b:epk. 
+:dd.Division
+:fn.Note! This is :hp2.integer division:ehp2. if the first value is an 
+integer! For :hp2.decimal division:ehp2., the numerator must be a 
+floating-point variable or immediate!
+:efn.
+:dt.:pk.a % b:epk. 
+:dd.Modulus
+:dt.:pk.a++:epk. 
+:dd.Increment by 1
+:dt.:pk.a--:epk. 
+:dd.Decrement by 1
+:edl.
+:h3.Pre or Post Increment?
+:p.Often times, the increment/decrement operators are used to great 
+effect in :pv.while:epv.-loop containing blocks like this:
+:i2.Increment/Decrement Pre/Post
+:fig width=column place=inline frame=rules.
+:xmp.
+int a = 0;
+int coolArray&lbrk.10&rbrk. = { ... };
+ 
+while(a < 10) {
+    doSomething(coolArray&lbrk.a++&rbrk.);
+}
+:exmp.
+:figcap.Post-increment loop example
+:efig.
+:p.In this example, :pv.a:epv. will be incremented :hp2.after:ehp2. it 
+is read and used for the array index for :pv.coolArray:epv. there in 
+the loop body. This ensures that the loop will properly exit without 
+running out-of-bounds.
+:p.However, you can change the position of that :pk.++:epk. operator to 
+make it such that reading the variable returns the :hp5.current:ehp5. 
+value:
+:fig width=column place=inline frame=rules.
+:xmp.
+int result = 0;
+int numbers&lbrk.&rbrk. = {1, 2, 3, 4, 5};
+ 
+void demo() {
+    int i = 0;
+    for(i = 0; i < 5; i++) {
+        result += ++numbers&lbrk.5&rbrk.;
+    }
+}
+:exmp.
+:figcap.Pre-increment loop example
+:efig.
+:h2 id=bitwise.Bitwise Operations
+:p.If you wish to preform :hp2.binary operations,:ehp2. you can use 
+bitwise operations! These let you manipulate individual bits within a 
+variable, and will be :hp1.amazingly:ehp1. useful later when we begin 
+manipulating STM32 peripherals!
+:p.Here are the bitwise operators:
+:dl tsize=15.
+:dt.:pk.a & b:epk. 
+:dd.:pv.a:epv. AND :pv.b:epv.
+:dt.:pk.a | b:epk. 
+:dd.:pv.a:epv. OR :pv.b:epv.
+:dt.:pk.a &caret. b:epk. 
+:dd.:pv.a:epv. XOR :pv.b:epv.
+:dt.:pk.a << b:epk. 
+:dd.Shift :pv.a:epv. left :pv.b:epv. times
+:dt.:pk.a >> b:epk. 
+:dd.Shift :pv.a:epv. right :pv.b:epv. times
+:dt.:pk.a ~ b:epk. 
+:dd.:pv.a:epv. NOT :pv.b:epv. 
+:edl.
+:p.To actually use these bitwise operators, please examine the 
+following sample. The :hp1.binary literal:ehp1. format is described in 
+:hdref refid=ltrls..
+:fig width=column place=inline frame=rules.
+:xmp.
+char a = 0b0001 & 0b0100; // a = 0101
+char b = 0b0111 | 0b1000; // b = 1111
+char c = ~0b1010;         // c = 0101
+:exmp.
+:figcap.Bitwise operations and binary literals
+:efig.
+:h2.Shorter Operations
+:p.Sometimes, you may have a statement like this:
+:xmp.sum = sum + 2;
+:exmp.
+:p.This is actually the :hp2.long:ehp2. way to write this! It can be 
+abbreviated as such:
+:xmp.sum += 2;
+:exmp.
+:p.The following other operators exist:
+:dl tsize=15.
+:dt.:pk.a += b:epk. 
+:dd.Addition
+:dt.:pk.a -= b:epk. 
+:dd.Subtraction
+:dt.:pk.a *= b:epk. 
+:dd.Multiplication
+:dt.:pk.a /= b:epk. 
+:dd.Division
+:dt.:pk.a %= b:epk. 
+:dd.Modulus
+:dt.:pk.a |= b:epk. 
+:dd.OR
+:dt.:pk.a &caret.= b:epk. 
+:dd.XOR
+:dt.:pk.a &tilde.= b:epk. 
+:dd.NOT
+:edl.
+:h1 id=ptrs.Pointers
+:p.The most difficult thing in C to grasp, by far, is the concept of a 
+:hp2.pointer.:ehp2. While there are many difficult and convoluted ways 
+of describing a pointer, I have narrowed it down to three that should 
+:q.click:eq. in your brain and provide a decent synopsis of what these 
+mythical types are:
+:i1.Pointer
+:ol.
+:li.A pointer is a special type of variable that stores a memory 
+address to another variable as its contents.
+:li.A pointer can be used to access any location in memory when 
+assigned to a value that itself is a numeric immediate containing a 
+memory address.
+:li.:hp2.Dereferencing:ehp2. a pointer lets you work with the contents 
+of memory located at the memory address stored in the pointer, may it 
+be reading or writing.
+:eol.
+:p.Since we are targeting an STM32 and will therefore need to 
+:hp1.directly:ehp1. access memory to control various things like I/O 
+configuration registers and whatnot, mastering pointers will be 
+:hp5.very:ehp5. important!
+:h2.Defining and Using Pointers
+:p.Pointers can be defined simply by inserting a :pk.*:epk. between a 
+variable's type definition and its name. There are actually 
+:hp1.three:ehp1. different ways to define a pointer, all of which are 
+valid:
+:fig width=column place=inline frame=rules.
+:xmp.
+int* x;
+int *y;
+int * z;
+:exmp.
+:figcap.Basic pointer definitions
+:efig.
+:lblbox.The Great Pointer Debate
+:p.Did you know that there is :hp1.no:ehp1. consensus on which of the 
+three pointer definition styles is correct? Some argue that the first 
+is correct, because the second looks like the :hp1.dereference:ehp1. 
+operator (we will look at that next) and the third looks like 
+multiplication! Others argue that the second is correct because you 
+can't define multiple pointers on the same line if you use the first or 
+third style! The truth is that :hp1.all:ehp1. of them are correct, and 
+you can use whichever one you want!
+:p.I, personally, use the first style on account of the explanation 
+given about it looking rather similar to the dereferencing operator.
+:elblbox.
+:h3.Using Pointers
+:p.Now that you have seen how to define pointers, let us see how they 
+are used. The simplest thing you can do with a pointer is fill it with 
+the memory location of an already-defined variable. Once our pointer is 
+defined, we will then manipulate the variable it points to 
+:hp1.through:ehp1. the pointer. This looks like this:
+:i2.Address-of operator
+:fig width=column place=inline frame=rules.
+:xmp.
+int x = 50;
+int* y = &x;        // & means "take the address of"
+ 
+// note this function takes an int, not an int pointer!
+void print(int number) {
+    // magically show the "number" on the screen somehow...
+}
+ 
+void pointerDemo() {
+    x = 51;         // change x to 51, y remains the same
+    print(*y);      // display what y points to, which is x = 51
+    *y = 52;        // y points to x and just changed x to 52
+    print(*y);      // display what y points to, which is x = 52
+    print(x);       // this also displays 52
+    print(&x)       // print the memory address of x, 0x20000000
+    print(&y)       // print the memory address of y, 0x20000004
+}
+:exmp.
+:figcap.Pointer usage example
+:efig.
+:p.Whenever you see :pk.*y:epk., this is called 
+:hp5.dereferencing.:ehp5. 
+:i2.Dereferencing
+:p.As you can see, both :pv.x:epv. and :pv.y:epv. are themselves 
+:hp5.variables:ehp5.; pointers are definitely a type of their own
+:fn.As in, pointers are a distinct type in the same way that integral 
+types, floating-point types, and function types are distinct types.
+:efn.
+, but that does not mean they don't have a memory address!
+:lblbox.Why are the memory addresses what they are?
+:p.On our STM32, the ROM starts at address :pv.0x08000000:epv. (this is 
+where our program is) and the RAM starts at :pv.0x20000000:epv. Since 
+we defined two variables, of the type :pk.int:epk., both consume 32 
+bits of memory (or, 4 bytes). Therefore, :pv.x:epv. is at 
+:pv.0x20000000:epv. and :pv.y:epv. is at :pv.0x20000004:epv.; if we had 
+another variable, it would be at :pv.0x20000008:epv. (because the STM32 
+uses 32-bit memory addresses, and each one results in 4 bytes of RAM 
+being used).
+:elblbox.
+:p.Likewise, as you can see in the above sample, pointers are treated 
+as variables when prepended by the :pk.*:epk. symbol; otherwise, they 
+will be treated as pointers!
+:h3.Strings and Arrays as Pointers
+:p.Strings are a special hybridization of arrays and pointers that are 
+used to store blocks of text. When you define a string, like this:
+:i2.Strings
+:fig width=column place=inline frame=rules.
+:xmp.char* myMessage = "this is a string";
+ 
+:exmp.
+:figcap.String definition example
+:efig.
+:p....you are actually defining :pv.myMessage:epv. as a pointer whose 
+memory address numeric value is equal to the memory location where that 
+message will eventually be stored. Likewise, you can define strings and 
+arrays both like this (using the pointer syntax :hp1.or:ehp1. the array 
+syntax):
+:fig width=column place=inline frame=rules.
+:xmp.
+char myMessage&lbrk.&rbrk. = "this is array-style";
+char* myOtherMessage = "this is pointer-style";
+:exmp.
+:figcap.Array-style string definition example
+:efig.
+:p.Likewise, we can define an array and then create a pointer to the 
+first element of the array:
+:fig width=column place=inline frame=rules.
+:xmp.
+int myNumbers&lbrk.&rbrk. = { 1, 2, 3, 4, 5 };
+int* numbersPointer = &myNumbers;
+ 
+void pointerDemo() {
+    print(myNumbers&lbrk.0&rbrk.);            // 1
+    print(*numbersPointer);         // also 1
+}
+:exmp.
+:figcap.Array/pointer intermixing
+:efig.
+:p.This may not seem useful now, but this will become :hp1.very:ehp1. 
+useful later on when we get to pointer arithmetic; see 
+:hdref refid=ptrmth. for more about this.
+:h3.Structure Pointers
+:p.You can also define pointers to structures, but this changes how you 
+use the structure. Just like you use the dereference operator to access 
+a plain pointer to a plain variable, you must also dereference the 
+structure pointer. However, there are actually :hp1.two:ehp1. operators 
+for accessing the fields of a structure pointer! See the following 
+example:
+:i2.Structure pointer
+:fig width=column place=inline frame=rules.
+:xmp.
+struct DemoStruct {
+    int a;
+    int b;
+};
+ 
+struct DemoStruct myStruct;
+ 
+void structPointerDemo() {
+    myStruct.a = 5;
+    myStruct.b = 10;
+ 
+    struct DemoStruct* myStructPointer;
+ 
+    print(myStruct.a);                    // 5
+    print(*(myStructPointer).a);          // also 5
+ 
+    (*myStructPointer).a = 20;
+    (*myStructPointer).b = 40;
+    print(myStruct.a);                    // 20
+    print(*(myStructPointer).a);          // also 20
+ 
+    myStructPointer->a = 100;             // other deref style
+    print(myStruct.a);                    // 100
+    print(myStructPointer->a);            // also 100
+}
+:exmp.
+:figcap.Structure pointer example
+:efig.
+:h2 id=ptrmth.Pointer Arithmetic
+:p.One of the more confusing things about pointers is that you can 
+perform arithmetic operations on them! This may not seem very useful to 
+us since we are not really handling strings on our STM32 (and you 
+normally see pointer arithmetic used in code that handles strings), but 
+it is still a useful tool to have in your belt nonetheless.
+:i2.Pointer arithmetic
+:p.Something :hp3.critical:ehp3. to remember when using pointer 
+arithmetic is to make sure that you always stay :hp2.aligned!:ehp2. If 
+you have an array of :pk.int:epk.s, and you march through the array one 
+byte at a time, you will not properly read the array since you'll be 
+reading 3/4ths of an :pk.int:epk.!
+:p.The following graphic shows two :pk.int:epk.s stored, back to back 
+on a little-endian
+:fn.The STM32 is :hp3.little-endian,:ehp3. meaning that multi-byte 
+types (like :pk.int:epk.) are stored such that the lowest fourth of the 
+four-byte :pk.int:epk. comes first.
+:efn.
+system:
+:fig width=column place=inline frame=rules.
+:xmp.int a = 12;
+int b = 34;
+:exmp.
+:cgraphic.
+&Ul.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Ur.
+&Lv. 00 &Lv. 00 &Lv. 00 &Lv. 0C &Lv. 00 &Lv. 00 &Lv. 00 &Lv. 22 &Lv. content
+&Tr.&Lh.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lh.&Tl.
+&Lv.         a         &Lv.         b         &Lv. variable
+&Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.
+:ecgraphic.
+:figcap.Storage of integers
+:efig.
+:p.Fortunately, any time you add or subtract to a pointer (either by 
+using the increment/decrement operation or by adding or subtracting an 
+integer to a pointer), the C compiler will automatically figure out the 
+alignment for you.
+:p.Going back to the above graphic, if you created a pointer to 
+:pv.a:epv. then incremented it by one (:pv.a++:epv.), you should be 
+moved over :hp5.four:ehp5. bytes such that the address increases by an 
+entire :pk.int:epk. at a time.
+:note.If you :hp1.cast:ehp1. the pointer type for your pointer to 
+:pv.a:epv. to something that :hp1.isn't:ehp1. an :pk.int:epk. (like 
+a:pk.char:epk.), you will then be responsible for ensuring correct 
+alignment (because incrementing the :pk.char:epk.-casted pointer to 
+:pv.a:epv. by 1 will not fully shift the memory address over into the 
+next :pk.int:epk.). For more information on this, see 
+:hdref refid=casts..
+:p.Here is an example of scanning through an array using both the 
+standard array syntax and by using pointer arithmetic:
+:fig width=column place=inline frame=rules.
+:xmp.
+int myNumbers&lbrk.&rbrk. = { 1, 2, 3, 4, 5 };
+void scan() {
+    for(int i = 0; i < 5; i++) {
+        print(myNumbers&lbrk.i&rbrk.);
+    }
+    for(int i = 0; i < 5; i++) {
+        print(*(myNumbers + i));          // array-as-a-pointer
+    }
+}
+:exmp.
+:figcap.Pointer arithmetic array-scan example
+:efig.
+:p.I'm sure you have several questions about the code, specifically 
+:q.why is the stop address not five times four:eq. and :q.why does 
+:pv.i:epv. not increase by 4 every iteration?:eq. The answer to this is 
+that when you perform pointer arithmetic, as mentioned before, you 
+:hp5.must:ehp5. always remain aligned; the C compiler does the 
+alignment for you such that you move only one array element at a time!
+Each :pk.int:epk. takes 4 bytes of memory, so the compiler must account 
+for the true size of the array and also step forwards one :pk.int:epk. 
+at a time. You, on the other hand, only have to move one index at a 
+time and the compiler figures out the rest!
+:h2.Pointers as Arguments
+:p.Sometimes, you may wish to write a function that actually 
+:hp1.modifies:ehp1. one or more of its arguments! With pointer 
+arguments, you can actually do this relatively easily. Since you pass 
+the memory address into the function, none of the function-calling 
+mechanics actually touch the variable that you are passing the pointer 
+to. Examine the following code block for an example of this:
+:fig width=column place=inline frame=rules.
+:xmp.
+int myNumber = 5;
+ 
+void increase(int* input) {
+    *input += 2;
+}
+ 
+void demo() {
+    print(myNumber);              // 5
+    increase(&myNumber);
+    print(myNumber);              // 7
+}
+:exmp.
+:figcap.Function with a pointer argument
+:efig.
+:p.Of course, the :pk.&:epk. operator passes a pointer to 
+:pv.myNumber:epv. into the :pv.increase():epv. function body.
+:h2.Function Pointers
+:p.The :q.final boss:eq. of pointers is the difficult craft of 
+:hp2.function pointers.:ehp2. These are pointers that, as the name 
+implies, point to functions and allow you to call them. These are 
+frequently used in a data structure called a :hp1.vtable:ehp1., but we 
+will not be discussing those.
+:i2.Function pointer
+:p.Here is a sample of defining and using a function pointer:
+:fig width=column place=inline frame=rules.
+:xmp.
+int add(int a, int b) {
+    return a + b;
+}
+ 
+void demo() {
+    int (*ptr)(int, int);         // leave off the arg names
+    ptr = add;                    // set ptr to the address of add()
+    int result1 = add(5, 10);
+    int result2 = ptr(5, 10);
+    int result3 = (*ptr)(5, 10);  // all three of these work!
+}
+:exmp.
+:figcap.Function pointer example
+:efig.
+:p.As you can see, there are three valid ways of calling a function 
+pointer.
+:note.If you set a function pointer to an invalid address like some 
+random memory address or to a variable, your microcontroller will crash!
+:h2 id=casts.Casting
+:p.A powerful feature found in C and almost always seen around pointers 
+is the concept of a :hp2.cast.:ehp2. A cast permits you to transform 
+the width of a variable (as in, the number of bytes that a variable 
+takes up in memory) or its signage (signed or unsigned).
+:p.Say that you declare a pointer of type :pk.void:epk. that points to 
+some output buffer. Depending on the data type that you write to that 
+pointer's memory location, different things may happen; let us assume 
+that a simple character display controller watches the memory address 
+:pv.0x001015A0:epv. and blasts text onto a screen. Here is a sample 
+that implements a system like this:
+:i1.Casting
+:fig width=column place=inline frame=rules.
+:xmp.
+void* display = 0x001015A0;
+ 
+void printString(char* text, int length) {
+    for(int i = 0; i < length; i++) {
+        *(char*)display = text&lbrk.i&rbrk.;
+    }
+}
+ 
+void printInt(int value) {
+    *(int*)display = value;
+}
+ 
+void demo() {
+    char* message = "This is a test";
+    printString(message, 14);
+    int number = 5;
+    printInt(number);
+}
+:exmp.
+:figcap.Pointer casting example
+:efig.
+:p.As you can see, we started with a :pk.void:epk. pointer and 
+converted it into either a :pk.char:epk. or :pk.int:epk. pointer based 
+on which data type we wished to output.
+:p.Something also very important (as discussed in :hdref refid=ptrmth.) 
+is the understanding that if you change the type of a pointer pointing 
+into an array to something else that :hp1.isn't:ehp1. the same as the 
+original array definition type, you will be performing misaligned 
+memory access and may get confused!
+:h1 id=preproc.Preprocessor
+:p.As you learned back at the start of this book, the 
+:hp3.preprocessor:ehp3. is one of the stages/programs that is called 
+when you compile your C program. The preprocessor uses various control 
+statements to implement:
+:ul.
+:li.Macros
+:li.Conditional compilation
+:li.Custom errors and warnings
+:li.Insertion of files
+:fn.Primarily :hp2.headers.:ehp2. 
+:efn.
+:eul.
+:p.The preprocessor statements always start with a pound (:pk.#:epk.) 
+starting in the first column of the file. Let us examine some of these:
+:h2.File Inclusion
+:p.The most-commonly used function of the C preprocessor is 
+the:pk.#include:epk. operator, which is used as follows:
+:i1.include (preprocessor)
+:xmp.#include <stm32l4xx.h>
+:exmp.
+:p.This will result in the contents of a file (at a specific location) 
+named :pv.stm32l4xx.h:epv. being inserted into your program at the line 
+the statement is on.
+:p.:hp2.For a list of C headers you can use in your program,:ehp2. see 
+:hdref refid=hdrs.!
+:p.There are actually :hp1.two:ehp1. ways of specifying file paths:
+:ol.
+:li.If the filename is enclosed in :pk.< >:epk., the :hp5.system 
+inclusion search path:ehp5. will be searched
+:li.If the filename is enclosed in :pk." ":epk., the current directory
+:fn.:q.Directory:eq. is an old term for what we call a 
+:hp5.folder:ehp5. today, and is more frequently used in programming 
+contexts!
+:efn.
+is searched
+:eol.
+:h3.Inclusion Search Path
+:p.UNIX C compilers (including UNIX-style C compilers, which the GCC 
+from STM32CubeIDE and ARM Clang from &mu.Vision are both considered) 
+have a compiler argument that lets you specify a custom inclusion 
+search path. Though you won't need to enter this on STM32CubeIDE 
+projects (as the IDE will automatically find any files in 
+the:pk.inc:epk. directories of your project and add those to the search 
+path), the compiler is: :pk.-I dirname:epk.
+:h2.Macros
+:p.A :hp3.macro:ehp3. is a very useful feature of the C preprocessor 
+that allows you to avoid the need for typing in tons and tons of code 
+over and over; :hp5.a macro is a form of text substitution.:ehp5. 
+:i1.define (preprocessor)
+:p.Macros come in two varieties:
+:ol.
+:li.Text macros
+:li.Macros with arguments
+:eol.
+:p.Let us examine text macros first. Say you have the following code:
+:fig width=column place=inline frame=rules.
+:xmp.
+#define ANSWER 15
+ 
+void doSomething() {
+    if(input == ANSWER) {
+        ...
+    }
+    ...
+}
+:exmp.
+:figcap.Text macros example
+:efig.
+:p.This example shows a macro definition that will replace any 
+occurrences of the text :pv.ANSWER:epv. in the program with 
+:pv.15:epv., irrespective of context.
+:h3.Macros With Arguments
+:p.Sometimes, you may want to use a macro to replace a block of code -- 
+for instance, if your program has lots of back-to-back :pk.else if:epk. 
+statements with similar condition checks, it may make sense to use a 
+macro that takes an argument.
+:p.Examine the following sample code:
+:fig width=column place=inline frame=rules.
+:xmp.
+#define CHECK(number) if(answer == number)
+ 
+int decision(int answer) {
+    CHECK(1) {
+        return 12;
+    }
+    CHECK(2) {
+        return 24;
+    }
+    return 0;          // fall-through if no cases match and leave
+ 
+}
+:exmp.
+:figcap.Macro with argument example
+:efig.
+:p.This may seem rather confusing, so, let's expand the macro and see 
+what the generated code that the compiler will actually end up 
+compiling looks like:
+:fig width=column place=inline frame=rules.
+:xmp.
+int decision(int answer) {
+    if(answer == 1) {
+        return 12;
+    }
+    if(answer == 2) {
+        return 24;
+    }
+    return 0;          // fall-through if no cases match and leave
+ 
+}
+:exmp.
+:figcap.Macro with argument example (expanded)
+:efig.
+:h3.Semicolon Consumption
+:p.The C compiler will consume (i.e. skip past) as many semicolons as 
+it can until the next statement is seen. A semicolon on its own, not 
+associated with any code, is called a :hp2.null statement.:ehp2. Such a 
+thing would look like this:
+:i1.Null statement
+:fig width=column place=inline frame=rules.
+:xmp.
+int doSomething() {
+    return 1;;;;;;;;;;;
+}
+:exmp.
+:figcap.Null statement example
+:efig.
+:p.Believe it or not, this is :hp1.completely:ehp1. valid! This can 
+become useful when we wish to have a statement that might look cleaner 
+as a macro, like this for example:
+:fig width=column place=inline frame=rules.
+:p.Un-expanded:
+:xmp.
+#define LEAVE(n) return n;
+ 
+int doSomething() {
+    LEAVE(5);
+}
+:exmp.
+:p.Expanded:
+:xmp.
+int doSomething() {
+    return 5;;
+}
+:exmp.
+:figcap.Null statement example with macro
+:efig.
+:p.Note that double semicolon there in the macro-expanded version of 
+the code.
+:h3.Multiline Macros
+:p.If you ever need to make a macro have multiple lines, you will need 
+to use the :hp2.backslash:ehp2. key (:pk.\:epk.). Here is an example of 
+a multiline macro:
+:fig width=column place=inline frame=rules.
+:xmp.
+#define CHECK_LEAVE(target, value) \
+    if(entry == target) {          \
+        return value;              \
+    }                              // no backslash here!
+ 
+int lookupTable(int entry) {
+    CHECK_LEAVE(5, 12);            // null statement!
+    CHECK_LEAVE(8, 41);
+    CHECK_LEAVE(10, 63);
+}
+:exmp.
+:figcap.Multiline macro example
+:efig.
+:p.You will want to use the backslash on all lines :hp1.except for the 
+last line.:ehp1.
+:h3.Command-line definition
+:p.You can also define macros on the C compiler command line with 
+the:pk.-D:epk. argument, like so:
+:xmp.cc -c myfile.c -DMYMACRO=1
+:exmp.
+:p.This defines the macro :pv.MYMACRO:epv. and sets its value to 1. You 
+would want to use this to implement conditional compilation; look down 
+the page a bit to learn about that.
+:note.Please don't use command-line macro definition to define anything 
+more sophisticated than simple variable substation macros!
+:h3.Undefining Macros
+:p.If for whatever reason you wish to :hp1.undefine:ehp1. a macro after 
+it is defined, you can do this pretty easily:
+:i1.undef (preprocessor)
+:xmp.#undef MYMACRO
+:exmp.
+:h2.Conditional Compilation
+:p.:hp2.Conditional compilation:ehp2. is a term that refers to having a 
+program that compiles differently based on the presence of certain 
+variables. In the case of C, we implement this by testing whether or 
+not a macro is defined (or by testing the value of a macro).
+:p.There are two groups of keywords that are used to implement 
+conditional compilation:
+:i1.ifdef (preprocessor)
+:i1.ifndef (preprocessor)
+:i1.else (preprocessor)
+:i1.endif (preprocessor)
+:i1.if (preprocessor)
+:i1.elif (preprocessor)
+:ol.
+:li.Generation 1
+:ul.
+:li.:pk.#ifdef:epk.
+:li.:pk.#ifndef:epk.
+:li.:pk.#else:epk.
+:li.:pk.#endif:epk. 
+:eul.
+:li.Generation 2
+:ul.
+:li.:pk.#if:epk.
+:li.:pk.#elif:epk.
+:li.:pk.#else:epk.
+:li.:pk.#endif:epk. 
+:eul.
+:eol.
+:p.As one might imagine by the :q.generations:eq. of keywords listed 
+above, the Generation 2 keywords were not available in C compilers 
+before 1989.
+:fn.For those interested in the history of C, there were several C 
+compilers popular from 1990-1995 that did not fully implement the C89 
+version of the C preprocessor, resulting in programmers being unable to 
+use the Generation 2 preprocessor conditional compilation keywords!
+:efn.
+:p.Let us examine the usage of both of these:
+:fig width=column place=inline frame=rules.
+:p.Generation 1
+:xmp.
+#define DEBUG 1                    // you would change this
+ 
+#ifdef DEBUG                       // only a #define check
+void debugger() {
+    // do something special in the debug version
+}
+#else
+void debugger() {}                 // do nothing otherwise
+#endif
+:exmp.
+:p.Generation 2
+:xmp.
+#define DEBUG 2                    // you would change this
+ 
+#if DEBUG == 1                     // compare the value instead
+void debugger() {
+    // debugging type 1
+}
+#elif DEBUG == 2
+void debugger() {
+    // debugging type 2
+}
+#else
+void debugger() {}                 // no debugging code
+#endif
+:exmp.
+:figcap.Conditional compilation examples
+:efig.
+:h2.Custom errors and warnings
+:p.You can use the C preprocessor to write your own errors and warnings 
+into your program, which is useful if you are using conditional 
+compilation and the user has specified some kind of irreconcilable 
+difference or unusable sequence of configuration parameters.
+:p.There are two keywords that implement this feature:
+:ol.
+:li.:pk.#warning:epk.
+:li.:pk.#error:epk. 
+:eol.
+:p.Take the following example, modified from one above:
+:fig width=column place=inline frame=rules.
+:xmp.
+#define DEBUG 2
+ 
+#if DEBUG == 1
+void debugger() {
+    // debugging type 1
+}
+#elif DEBUG == 2
+#warning "debugging type 2 selected! performance will be slower!"
+void debugger() {
+    // debugging type 2
+}
+#else
+#error "no debugging type specified! cannot compile!"
+#endif
+:exmp.
+:figcap.Custom error/warning example
+:efig.
+:h1 id=ilasm.Inline Assembly
+:p.C allows you to code assembler statements directly into your 
+program, without having to also have assembly files (like you did in 
+Computer Systems class) linked into your project.
+:fn.If you do that, this means you have to figure out how to make an 
+assembly function that is compatible with the C function calling 
+convention!
+:efn.
+:p.There are two :q.flavors:eq. of inline assembly:
+:h2.Basic Inline Assembly
+:p.If you wish to include totally static inline assembler statements 
+that don't reference any variables, you can do so like this:
+:i1.asm function
+:fig width=column place=inline frame=rules.
+:xmp.
+void enableInterrupts() {
+    asm("cpsie i");
+}
+:exmp.
+:figcap.Basic inline assembly example
+:efig.
+:p.The :pk.cpsie i:epk. instruction means :q.Change Processor State, 
+Interrupt Enable (Interrupts On).:eq.
+:p.If you encounter issues, you can add :pv.volatile:epv. keyword to 
+the statement such that the statement now reads :pk.asm 
+volatile("XXXX"):epk. 
+:i2.volatile
+:h2.Extended Inline Assembly
+:p.If you wish to reference any variables, the compiler will allow you 
+to substitute those into the assembler statements 
+as:pk.%0:epk.,:pk.%1:epk., etc. In other words, if you plug in a 
+variable name, you will reference it as :pk.%0:epk. in the 
+statement.However, if you use the more complicated :hp5.custom-named 
+variable approach:ehp5., you can use an actual variable name instead of 
+a number!
+:i2.Extended syntax (percents)
+:p.Likewise, you will need to specify the following things:
+:ol.
+:li.All of your :hp2.input operands:ehp2.
+:li.All of your :hp2.output operands:ehp2.
+:li.Any registers that your assembler statement altered, in the 
+:hp2.clobber list:ehp2. 
+:eol.
+:p.Now, there are two forms of extended inline assembler statements:
+:ol.
+:li.Positional variables (this is the aforementioned :pk.%0:epk. thing)
+:li.Custom-named variables
+:eol.
+:p.No matter which you use, they both follow the same basic syntax:
+:fig width=column place=inline frame=rules.
+:xmp.
+void magic() {
+    asm volatile(
+        "statement"
+        : outputs
+        : inputs
+        : clobbers
+    );
+}
+:exmp.
+:figcap.Extended inline assembly syntax
+:efig.
+:h3.Positional Variables
+:p.The key thing to remember using this syntax form is that the 
+variables you reference will be dropped straight into the assembler 
+statement with format-specifier-style substitutions!
+:fn.A :q.format specifier:eq. is the format string that the 
+:pv.printf:epv. and :pv.scanf:epv. family of C library statements use.
+See :hdref refid=fstring. for more information! You probably won't need 
+to use these though!!
+:efn.
+:p.Here is an example, then we will look at what happens and why:
+:fig width=column place=inline frame=rules.
+:xmp.
+void storer(uint32_t* address, uint32_t value) {
+    asm volatile(
+        "str %1, &lbrk.%0&rbrk."
+        :                             // outputs (none)
+        : "r" value, "r" address      // inputs
+        : "memory"                    // we modified memory
+    );
+}
+:exmp.
+:figcap.Extended inline assembly positional variables
+:efig.
+:p.Now, this statement has no outputs (since we aren't reading anything 
+into any registers or memory addresses) and two inputs (the 
+:pv.address:epv. and the :pv.value:epv.).
+:p.The :pk."memory":epk. means that we are :hp3.modifying memory:ehp3. 
+-- this function just simply stores a 32-bit variable at some memory 
+address. If you are :hp3.modifying the condition code:ehp3. (which 
+would occur if you use any math instructions), you would 
+specify:pk."cc":epk. instead.
+:p.You can also see the :q.constraint lists:eq. holding 
+those:pk."=r":epk. terms. This tells the compiler to pick a register 
+(or several) for your statement to use. You can get the compiler to 
+allocate the following things for you:
+:ul.
+:li.:pk."=r":epk. is for a :hp2.register:ehp2.
+:li.:pk."=w":epk. is for a :hp2.floating-point register:ehp2.
+:li.:pk."=I":epk. places in an :hp2.integer constant:ehp2.
+:li.:pk."=m":epk. is for a :hp2.memory address:ehp2. 
+:fn.This is really for the Intel x86 or the IBM System Z instruction 
+sets, where there is a specific way that you pass memory addresses
+:efn.
+ 
+:eul.
+:lblbox.Register Naming
+:p.Now, you might ask :hp1.:q.Evie, where in the world are the register 
+names?!:eq.:ehp1. Well, you cannot just take any register and use it 
+:hp1.because the compiler may be using that for a variable 
+already!:ehp1. This is why you have to let the compiler figure out 
+which registers you can use
+:elblbox.
+:h3.Custom-named Variables
+:p.This syntax is a bit more advanced than the previous :q.simpler:eq. 
+form of doing extended inline assembly. This one is as follows:
+:p.Since this seems inconceivably difficult at first glance, let us 
+examine a working example:
+:fig width=column place=inline frame=rules.
+:xmp.
+uint32_t adder(uint32_t in1, uint32_t in2) {
+    uint32_t answer;
+ 
+    asm volatile(
+        "add %&lbrk.out&rbrk., %&lbrk.a&rbrk.,  %&lbrk.b&rbrk."
+        : &lbrk.out&rbrk. "=r" (answer)         // outputs
+        : &lbrk.a&rbrk. "r" (in1),              // inputs
+          &lbrk.b&rbrk. "r" (in2)
+        : "cc"                        // modified the cond. code
+    );
+ 
+    return answer;
+}
+:exmp.
+:figcap.Extended inline assembly custom-named variables
+:efig.
+:p.This statement is passingly similar to the basic syntax example, 
+except this one has an output register (since we need to get our result 
+from the statement somehow). As you can see in the square brackets, we 
+substitute in the names we want.
+:h1.Storage Classes and Qualifiers
+:p.In your program, you may wish to override the so-called :hp2.storage 
+class:ehp2. of a variable. The storage class defines how a variable 
+will be stored and how it will be moved around a function. Likewise, 
+you may wish to add a :hp2.qualifier:ehp2. if you want to lock a 
+variable or prevent the C compiler from optimizing access to the 
+variable.
+:fn.One might ask why they could possibly want to un-optimize 
+something, and the answer is simple: you will want to use 
+the:pk.volatile:epk. keyword (which this chapter discusses shortly 
+after where this footnote appears) whenever you are using variables 
+within interrupt service routines.
+:efn.
+:h2 id=storcls.Storage Classes
+:p.There are four storage classes you can stick before the type of your 
+variable:
+:i1.auto
+:i1.register (storage class)
+:i1.static
+:i1.extern
+:ol.
+:li.:pk.auto:epk.
+:p.This defines the variable such that it is automatically created and 
+destroyed when you enter a function. For a global variable,
+:fn.A global variable is a variable defined :hp1.outside:ehp1. a 
+function.
+:efn.
+this keyword does nothing; for a local variable,
+:fn.A local variable is a variable defined :hp1.inside:ehp1. a function.
+:efn.
+it is the normal way of defining a variable. :hp5.By default, this 
+keyword is secretly present on every variable:ehp5. and you don't need 
+to type it every time since it's the stock behavior for every variable.
+:li.:pk.register:epk.
+:p.This forces a variable to stay located within registers. This 
+keyword may have been seen in performance-critical C code back in the 
+1980s, but your STM32's ARM processor has lots of registers and the C 
+compiler has to put every variable in a register anyways (because ARM 
+is RISC).
+:li.:pk.static:epk.
+:p.If you define a variable as :pv.static:epv. within a function, its 
+value will persist across several runs of a function; this is the 
+opposite of the behavior that :pv.auto:epv. instills and is 
+:hp5.not:ehp5. the default unless you ask for it.
+:li.:pk.extern:epk.
+:p.If you define a variable with :pv.extern:epv., you are telling the C 
+compiler that the variable cannot be found within the current C source 
+file and that it should let the linker resolve the variable's name into 
+an address. You can create :pv.extern:epv. references to any global 
+variable in your program.
+:eol.
+:h2 id=quals.Qualifiers
+:p.You can put a qualifier before the storage class to restrict the 
+behavior of variables to certain conditions:
+:i1.const
+:i1.volatile (qualifier)
+:ol.
+:li.:pk.const:epk.
+:p.Make a variable constant/read-only.
+:li.:pk.volatile:epk.
+:p.Make any access to a variable non-optimized. This is recommended for 
+any variables that you use in interrupt service routines or IRQ 
+handlers.
+:li.:pk.restrict:epk.
+:p.This is used to mark a pointer as the sole way to access a variable, 
+and the base variable name that the pointer points to will never be 
+used to access it. This is useful when you are using pointers to access 
+arrays, and it allows the compiler to employ useful optimization 
+techniques (like vectorization).
+:eol.
+:h2.Keyword Position Summary
+:p.The following diagram shows the layout of these newly-introduced 
+keywords on a variable definition.
+:fig width=column place=inline frame=rules.
+:cgraphic.
+&Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.
+&Lv. qualifier &Lv.  sclass  &Lv.   type   &Lv.   name   &Lv.
+&Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.
+:ecgraphic.
+:figcap.Storage class/qualifier positioning
+:efig.
+:h1.C Keywords Reference
+:p.Here is a series of useful tables that lists out the keywords we 
+have learned about so far:
+:h2.Flow Control
+:p.These are your core keywords that control program execution.
+:table cols='1i * 2i'.
+:tcap.C Keywords: Flow Control
+:thd.
+:c.:hp2.Keyword:ehp2.
+:c.:hp2.Description:ehp2.
+:c.:hp2.Location:ehp2.
+:ethd.
+:row split=yes.
+:c.:pk.break:epk.
+:c.Exit from a :pv.while:epv., :pv.for:epv., or :pv.case:epv.
+block
+:c.:hdref refid=switch.
+:row split=yes.
+:c.:pk.case:epk.
+:c.Start a region of code to run when the conditions on the
+statement are met (within a :pv.switch:epv. statement)
+:c.:hdref refid=switch.
+:row split=yes.
+:c.:pk.continue:epk.
+:c.Jump to the next iteration of a :pv.while:epv. or
+:pv.for:epv. loop immediately
+:c.:hdref refid=while.
+:row split=yes.
+:c.:pk.default:epk.
+:c.If no other :pv.case:epv. statements
+match, this one will be ran (within a :pv.switch:epv.
+statement)
+:c.:hdref refid=switch.
+:row split=yes.
+:c.:pk.do:epk.
+:c.Run a block of a :pv.while:epv. loop :hp1.before:ehp1. the
+condition statement
+:c.:hdref refid=dowhile.
+:row split=yes.
+:c.:pk.else:epk.
+:c.Used in an :pv.if:epv. statement with or without some
+:pv.else if:epv. statements to define conditions within the
+:pv.if:epv. statement
+:c.:hdref refid=elseif.
+:row split=yes.
+:c.:pk.if:epk.
+:c.Run code if a condition is met
+:c.:hdref refid=ifstmt.
+:row split=yes.
+:c.:pk.return:epk.
+:c.Return a variable value when leaving a function body (only
+for functions that return a type; :pv.void:epv. functions are
+exempt from this)
+:c.:hdref refid=return.
+:row split=yes.
+:c.:pk.switch:epk.
+:c.Provide a simple way of evaluating multiple back-to-back
+conditions in lieu of an :pv.if:epv. statement
+:c.:hdref refid=switch.
+:etable.
+:h2.Type Keywords
+:p.These keywords specify variable types; the :pk.stdint.h:epk. types 
+are a superset of these. For those, see the table in 
+:hdref refid=c99type..
+:table cols='1i * 2i'.
+:tcap.C Keywords: Type Keywords
+:thd.
+:c.:hp2.Keyword:ehp2.
+:c.:hp2.Description:ehp2.
+:c.:hp2.Location:ehp2.
+:ethd.
+:row split=yes.
+:c.:pk.int:epk.
+:c.32-bit integer
+:c.:hdref refid=vars.
+:row split=yes.
+:c.:pk.char:epk.
+:c.8-bit ASCII character
+:c.:hdref refid=vars.
+:row split=yes.
+:c.:pk.short:epk.
+:c.16-bit small integer
+:c.:hdref refid=vars.
+:row split=yes.
+:c.:pk.long:epk.
+:c.32-bit integer (:pv.long:epv.s are 32 bits wide on 32-bit CPUs)
+:c.:hdref refid=vars.
+:row split=yes.
+:c.:pk.float:epk.
+:c.Single-precision floating-point number
+:c.:hdref refid=vars.
+:row split=yes.
+:c.:pk.double:epk.
+:c.Double-precision floating-point number
+:c.:hdref refid=vars.
+:row split=yes.
+:c.:pk.void:epk.
+:c.Lack of a type (only for functions and some pointers)
+:c.:hdref refid=funcs.
+:row split=yes.
+:c.:pk.signed:epk.
+:c.Store the value with 2's complement
+:c.:hdref refid=vars.
+:row split=yes.
+:c.:pk.unsigned:epk.
+:c.Don't store the value with 2's complement
+:c.:hdref refid=vars.
+:etable.
+:h2.Storage Classes
+:p.Use these before a variable type to control how it gets stored.
+:table cols='1i * 2i'.
+:tcap.C Keywords: Storage Classes
+:thd.
+:c.:hp2.Keyword:ehp2.
+:c.:hp2.Description:ehp2.
+:c.:hp2.Location:ehp2.
+:ethd.
+:row split=yes.
+:c.:pk.auto:epk.
+:c.Variable is created and destroyed whenever you enter and leave the
+function (this is the default and you need not type it)
+:c.:hdref refid=storcls.
+:row split=yes.
+:c.:pk.static:epk.
+:c.Make a variable's value persist across several runs of a function
+:c.:hdref refid=storcls.
+:row split=yes.
+:c.:pk.register:epk.
+:c.Confine a variable to always be in a CPU register (the compiler
+does this anyways for you)
+:c.:hdref refid=storcls.
+:row split=yes.
+:c.:pk.extern:epk.
+:c.Tell the compiler that it can find a variable's location in
+memory in another C file (to be resolved by the linker later)
+:c.:hdref refid=storcls.
+:etable.
+:h2.Variable Qualifiers
+:p.Put these before your storage class to control what you can do with 
+the variable!
+:table cols='1i * 2i'.
+:tcap.C Keywords: Variable Qualifiers
+:thd.
+:c.:hp2.Keyword:ehp2.
+:c.:hp2.Description:ehp2.
+:c.:hp2.Location:ehp2.
+:ethd.
+:row split=yes.
+:c.:pk.const:epk.
+:c.Make a variable a constant
+:c.:hdref refid=quals.
+:row split=yes.
+:c.:pk.volatile:epk.
+:c.Disable optimization for a variable; inform the compiler that
+the variable's value may change at any time
+:c.:hdref refid=quals.
+:row split=yes.
+:c.:pk.restrict:epk.
+:c.Mark a pointer as being the only read/write path to the variable
+it points to (the variable itself on the other side of the pointer
+will only be accessed through this pointer)
+:c.:hdref refid=quals.
+:etable.
+:h2.User-Defined Types
+:p.These keywords declare custom types!
+:table cols='1i * 2i'.
+:tcap.C Keywords: User-Defined Types
+:thd.
+:c.:hp2.Keyword:ehp2.
+:c.:hp2.Description:ehp2.
+:c.:hp2.Location:ehp2.
+:ethd.
+:row split=yes.
+:c.:pk.struct:epk.
+:c.Define a structure compound type
+:c.:hdref refid=structs.
+:row split=yes.
+:c.:pk.union:epk.
+:c.Define a union compound type
+:c.:hdref refid=unions.
+:row split=yes.
+:c.:pk.enum:epk.
+:c.Define a list of enumerations that map to integers
+:c.:hdref refid=enums.
+:row split=yes.
+:c.:pk.typedef:epk.
+:c.Assign the name of one type to some custom name
+(:pk.stdint.h:epk. does this)
+:c.:hdref refid=structs.
+:etable.
+:h2.Special Operators
+:p.These are special operators that aren't functions but behave like 
+functions!
+:table cols='1i * 2i'.
+:tcap.C Keywords: Special Operators
+:thd.
+:c.:hp2.Keyword:ehp2.
+:c.:hp2.Description:ehp2.
+:c.:hp2.Location:ehp2.
+:ethd.
+:row split=yes.
+:c.:pk.sizeof:epk.
+:c.Have the compiler compute the size of a variable and substitute
+in an integer where this keyword is found
+:c.:hdref refid=sizeof.
+:row split=yes.
+:c.:pk.asm:epk.
+:c.Define an inline assembler statement
+:c.:hdref refid=ilasm.
+:row split=yes.
+:c.:pk.__asm__:epk.
+:c.Alternate version of :pk.asm:epk. (note that there are two
+underscores before and after the word)
+:c.:hdref refid=ilasm.
+:etable.
+:h0.Programming the STM32
+:p.Now that you understand the C language and its syntax/rules, we will 
+now apply our knowledge and write some programs specifically for our 
+STM32 board!
+:h1.Basic STM32 Program Structure
+:p.Before examining some of the tasks we can perform, let us first 
+explore how we should start our program!
+:note.This chapter will :hp5.not:ehp5. cover actually 
+:hp1.creating:ehp1. projects -- if you need help with that, please see 
+:hdref refid=mxproj.!
+:h2 id=hdrs.Including the Headers
+:p.The STM32 Development Toolchain (of which STM32CubeIDE provides for 
+us) provides a number of important :hp3.headers:ehp3. we can use:
+:i1.STM32 Headers
+:table cols='1i *'.
+:tcap.Base C Library Headers
+:thd.
+:c.:hp2.Header Name:ehp2.
+:c.:hp2.Description:ehp2.
+:ethd.
+:row split=yes.
+:c.:pk.float.h:epk.
+:c.Floating-point type definitions
+:row split=yes.
+:c.:pk.limits.h:epk.
+:c.Definitions for the largest numbers/maximums for each type
+:row split=yes.
+:c.:pk.math.h:epk.
+:c.Various algebra and trig functions
+:row split=yes.
+:c.:pk.stdint.h:epk.
+:c.C99 datatypes (:pv.uint322_t:epv. and others)
+:row split=yes.
+:c.:pk.string.h:epk.
+:c.C string functions
+:row split=yes.
+:etable.
+:table cols='1i *'.
+:tcap.STM32 C Library Headers
+:thd.
+:c.:hp2.Header Name:ehp2.
+:c.:hp2.Description:ehp2.
+:ethd.
+:row split=yes.
+:c.:pk.stm32l4xx.h:epk.
+:c.STM32L4xx (ELEC 3040/3050 board) definitions
+:row split=yes.
+:c.:pk.stm32f4xx.h:epk.
+:c.STM32F4xx (ELEC 2220 board) definitions
+:row split=yes.
+:c.:pk.core_cm4.h:epk.
+:c.Basic ARM Cortex-M4 components (automatically included)
+:etable.
+:h2.The Main Function
+:p.Now that you know which headers you need to include,
+:fn.Hint for 3040/3050: you want :pk.stm32l4xx.h:epk. at a minimum, and 
+you likely want :pk.stdint.h:epk. too!
+:efn.
+let us look at the basic contents of a program.
+:i1.main() function
+:p.Here is the :q.minimum viable example:eq. you can use:
+:fig width=column place=inline frame=rules.
+:xmp.
+#include <stm32l4xx.h>
+#include <stdint.h>
+ 
+int main() {
+    // program goes here
+}
+:exmp.
+:figcap.STM32 C program template (STM32L4xx board)
+:efig.
+:note.If you are using the Computer Systems board (perhaps you are 
+reading this for a Capstone project), use the :pk.stm32f4xx.h:epk. 
+header instead of :pk.stm32l4xx.h:epk.!
+:h2.Program Startup Process
+:p.While you certainly see that :pv.int main():epv. function, there are 
+actually several other things that occur :hp1.before:ehp1. you enter 
+your :pv.main:epv. function! Here they are:
+:ol.
+:li.The :pk.startup.h:epk. assembly-language program
+:fn.This :pk.startup.h:epk. file is :hp5.always:ehp5. included with 
+your program when you compile it!
+:efn.
+initializes core system peripherals.
+:li.The :pv.int main():epv. function is called.
+:li.If your program exits from the :pv.main:epv. function, there is an 
+infinite loop in :pk.startup.s:epk. that the program will land in.
+:eol.
+:h2.Filling Out Your Program
+:p.You will, naturally, want to include more than just a :pv.main:epv. 
+function that'll exit instantly. Here is a slightly more complex 
+example that shows function definition and more:
+:fig width=column place=inline frame=rules.
+:xmp.
+#include <stm32l4xx.h>
+#include <stdint.h>
+ 
+void GPIOsetup() {
+    ...
+}
+ 
+void interruptsetup() {
+    ...
+}
+ 
+void counter() {
+    ...
+}
+ 
+int main() {
+    GPIOsetup();
+    interruptsetup();
+    while(1) {
+        counter();
+        __asm__("wfi");
+    }
+}
+:exmp.
+:figcap.More-complex STM32 C program
+:efig.
+:p.As you can see in the above example, I have an assembly-language 
+statement in the program! This is wrapped in 
+the:pk.__asm__("XXXX"):epk. compiler built-in function. For more 
+information on this, flip back to :hdref refid=ilasm..
+:h1.GPIO
+:p.The first thing you will want to configure are the :hp2.general 
+purpose input/output:ehp2. pins -- these let your STM32 easily talk to 
+the outside world. The GPIO pins, as you learned in Computer Systems 
+class, are grouped into 16-pin :hp5.ports:ehp5. wherein each pin can be 
+configured independently (but you end up accessing the entire port 
+register at the same time for each pin).
+:h2 id=moder.Basic Pin Configuration
+:p.The STM32 device header you included includes :pv.struct:epv. 
+definitions for the various GPIO registers as well as helpful textual 
+macros that alleviate the need to type in individual bits using binary 
+literals. Some of the registers we will be using in this exercise are:
+:ul.
+:li.The :hp5.Register and Clock Control:ehp5. register, :pk.RCC:epk.
+:ul.
+:li.:pk.RCC->AHB2ENR:epk. 
+:fn.This is the C statement you will type in to use this 
+register;:pk.RCC:epk. is a structure pointer, so you use the arrow 
+operator :pv.->:epv. to access the members.
+:efn.
+-- the AHB2 peripheral clock enable register
+:eul.
+:li.The :hp5.GPIO:ehp5. registers, :pk.GPIOx:epk.
+:ul.
+:li.:pk.GPIOx->MODER:epk. -- the mode register that configures pins as 
+inputs, outputs, alternates, or analogs
+:li.:pk.GPIOx->IDR:epk. -- the register that allows you to 
+:hp5.read:ehp5. GPIO pins (inputs)
+:li.:pk.GPIOx->ODR:epk. -- the register that allows you to 
+:hp5.write:ehp5. GPIO pins (outputs)
+:eul.
+:eul.
+:p.There are several more, and you can find more information about 
+these in the books listed in :hdref refid=biblio..
+:p.Now, in order to actually configure GPIO pins, you must first 
+:hp2.enable the GPIO clock.:ehp2. 
+:fn.You have to do this because by default on the STM32, all of the 
+peripherals are powered-down and must be manually enabled using one of 
+the :pk.RCC:epk. control registers.
+:efn.
+To do this, simply set the :pv.GPIOAEN:epv. bit of:pk.RCC->AHB2ENR:epk.:
+:fig width=column place=inline frame=rules.
+:xmp.
+#include <stm32l4xx.h>
+ 
+void gpiosetup() {
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+    ...
+}
+ 
+int main() {
+    gpiosetup();
+    while(1) {
+        __asm__("wfi");
+    }
+}
+:exmp.
+:figcap.GPIOA clock enablement
+:efig.
+:p.The :pv.stm32l4xx.h:epv. header has a macro that defines 
+:pv.GPIOAEN:epv. as 1, which is the zeroth bit of the register (which 
+corresponds to GPIOA's clock). Once the clock activates, we can 
+configure the :hp2.mode register:ehp2. to set the behavior of each pin.
+The :pk.GPIOA->MODER:epk. register is laid out as follows:
+:fig width=column place=inline frame=rules.
+:cgraphic.
+&Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.
+&Lv. Px15  &Lv. PxNN  &Lv.  Px1  &Lv.  Px0  &Lv.
+&Tr.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Tl.
+&Lv. A &Lv. B &Lv. ..... &Lv. A &Lv. B &Lv. A &Lv. B &Lv.
+&Ll.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lr.
+:ecgraphic.
+:figcap.GPIOx_MODER layout
+:efig.
+:p.The :pk.AB:epk. bit pattern for each register controls the mode, 
+which can be one of the following:
+:table cols='1i 2i'.
+:tcap.GPIO MODER Bit Patterns
+:thd.
+:c.:hp2.AB:ehp2.
+:c.:hp2.Mode:ehp2.
+:ethd.
+:row.
+:c.:pk.00:epk.
+:c.Input
+:row.
+:c.:pk.01:epk.
+:c.Output
+:row.
+:c.:pk.10:epk.
+:c.Alternate Function
+:row.
+:c.:pk.11:epk.
+:c.Analog Mode
+:etable.
+:p.Given this information, say we want to enable :pk.PB3:epk. as output.
+:fn.:pk.PB3:epk. corresponds to a green LED at the bottom-right of your 
+Nucleo-L432 board!
+:efn.
+The following code will do that:
+:fig width=column place=inline frame=rules.
+:xmp.
+#include <stm32l4xx.h>
+ 
+void gpiosetup() {
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;   // note: GPIOB
+    //   GPIOB pins:  3.2.1.0.
+    GPIOB->MODER &= ~0b11000000;           // clear bits
+}
+ 
+int main() {
+    gpiosetup();
+    while(1) {
+        __asm__("wfi");
+    }
+}
+:exmp.
+:figcap.PB3 output enablement example
+:efig.
+:lblbox.Clearing and Setting
+:p.To clear bits, use this:
+:xmp.GPIOA->MODER &= &tilde.0b11000000;
+:exmp.
+:p.To set bits, use this:
+:xmp.GPIOA->MODER |= 0b11000000;
+:exmp.
+:note.You have to use the binary complement (i.e. NOT) operator to 
+:hp1.invert:ehp1. to values for clearing, or you will do the reverse of 
+what you wanted to!
+:elblbox.
+:h3.Outputting Values
+:p.Now, at this point, you will inevitably want to actually write some 
+data to the output. Here is a handy list containing code chunks for 
+:hp2.setting:ehp2. and :hp2.clearing:ehp2. output pins:
+:fig width=column place=inline frame=rules.
+:p.To set (enable) PB3:
+:xmp.
+//              3210
+GPIOB->ODR |= 0b1000;
+:exmp.
+ 
+:p.To clear (disable) PB3: 
+:xmp. 
+//               3210 
+GPIOB->ODR &= &tilde.0b1000;
+:exmp.
+:figcap.Setting and clearing PB3 example
+:efig.
+:h2.Configuring and Using Inputs
+:p.First, flip back to :hdref refid=moder. and make sure you pay close 
+attention to the :pv.MODER:epv. value to declare a pin as input: 
+:pk.00:epk.. Of course, you would use the :pv.&=:epv. operation to 
+clear those bits. 
+:p.Here is an example that declares PA0 as an input:
+:fig width=column place=inline frame=rules.
+:xmp.
+#include <stm32l4xx.h>
+ 
+void gpiosetup() {
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;   // note: GPIOB
+    //   GPIOB pins:   0.
+    GPIOB->MODER &= ~0b00;
+}
+ 
+int main() {
+    gpiosetup();
+    while(1) {
+        __asm__("wfi");
+    }
+}
+:exmp.
+:figcap.PA0 input enablement example
+:efig.
+:p.In order to actually use these, you can read the :pk.IDR:epk. 
+register like so: 
+:i1.Masking off (bits)
+:fig width=column place=inline frame=rules.
+:xmp.
+if(GPIOA->IDR & 0b1 == 1) {
+    // this pin is active 
+}
+else {
+    // this pin is not active
+}
+:exmp.
+:figcap.PA0 input reading example
+:efig.
+:p.Now, you might be asking :q.Evie, why are you ANDing the IDR value 
+with 1?:eq. Well, you want to :hp5.mask off:ehp5. bits such that you 
+only :hp1.get what you want:ehp1. 
+:lblbox.Special Pins on GPIOA 
+:p.:hp2.PA14:ehp2. and :hp2.PA15:ehp2. are special, declared as inputs 
+by default, and are used to allow the debugger to communicate with the 
+:hp5.ST-LINK:ehp5. chip on the underside of the board (this is the chip 
+that drives the USB port). Because one of these is a clock and the 
+other one is a data pin, their values jitter erattically and rapidly, 
+so you must :hp1.mask off:ehp1. the values you want when you read from 
+GPIOA! 
+:elblbox.
+:h3.Pull-Up Resistors
+:h2 id=altfnc.Alternate Function Mode
+:h2 id=analog.Analog Mode
+:h1.Interrupts
+:h1.Timers
+:h2.PWM
+:h1.ADC
+:appendix.
+:h2 id=biblio.Bibliography
+:p.The following other books will be extensively useful in your studies:
+:ul.
+:li.:hp2.RM0394 Reference Manual:ehp2. -- contains all of the 
+configuration registers and their corresponding bits
+:li.:hp2.STM32L432KC Datasheet:ehp2. -- contains a table of alternate 
+function pins
+:eul.
+:h2 id=mxproj.Creating STM32CubeMX/IDE Projects
+:p.Here is an outline of steps required to create an STM32 project.
+:ol prefix='setup checkoff'.
+:li.Create a directory
+:fn.A :q.directory:eq. is a :hp5.folder:ehp5.; tthis term is more 
+frequently heard amongst programmers!
+:efn.
+in one of the following locations:
+:ul.
+:li.The :pk.H:\:epk. drive
+:li.A flash drive
+:li.:hp3.NOT:ehp3. the root of the :pk.C:\:epk. drive!!
+:eul.
+:li.Open :hp2.STM32CubeMX:ehp2. from the Start menu.
+:li.Click :rk.File:epk., then :rk.New Project...:erk.
+:li.Several dialog boxes downloading files will appear, just let those 
+run.
+:li.In :q.Commercial Part Number:eq., enter the STM32 model:
+:ul.
+:li.:pk.STM32L432KCU6:epk., for the current 3040/3050 board (the 
+:q.KC:eq. board)
+:li.:pk.STM32L412KBU6:epk., for the older 3040/3050 board (the 
+:q.KB:eq. board)
+:li.:pk.STM32F411VET6:epk., for the 2200 board
+:eul.
+:li.Under the :pv.Part No:epv. header in the bottom half of the screen, 
+click the part number that came up.
+:li.Click :rk.Start Project:erk. at the top right.
+:li.Click :rk.Project Manager:erk..
+:li.In :hp2.Project Name:ehp2., enter a name of your choosing.
+:li.In :hp2.Project Location:ehp2., click :rk.Browse:erk. and locate 
+the directory you created in Step 1.
+:note.If your path starts with something that looks like 
+:pv.\\sage.eng.auburn.edu\:epv., you did not properly specify the 
+directory you created.
+:li.Make sure :hp2.Application Structure:ehp2. is set to 
+:hp2.Advanced:ehp2..
+:li.Change :hp2.Toolchain/IDE:ehp2. from :rk.EWARM:erk. 
+to:rk.STM32CubeIDE:erk..
+:li.Uncheck the checkbox to the left of :hp2.Use Default Firmware 
+Location.:ehp2.
+:li.In the :hp2.Firmware Relative Path:ehp2., click :rk.Browse:erk. and 
+either type in or navigate to :pk.C:\Temp\STM32CubeFirmware:epk..
+:note.If this step fails, re-check the box and continue to the next 
+step; you'll have to wait a few minutes to download the firmware, 
+though!
+:li.Click :rk.Generate Code:erk. and wait for a while.
+:li.Click :rk.Open Project:erk..
+:li.STM32CubeIDE will open, permitting you to continue with the rest of 
+your lab.
+:eol.
+:h2 id=fstring.Format Specifiers
+:p.These are used in the :pk.printf:epk. and :pk.scanf:epk. family of C 
+library functions; only :pk.scanf:epk. is available on the STM32 target 
+C library in :pk.string.h:epk..
+:table cols='1i 1i *'.
+:tcap.Format Specifiers
+:thd.
+:c.:hp2.Specifier:ehp2.
+:c.:hp2.Type:ehp2.
+:c.:hp2.Description:ehp2.
+:ethd.
+:row.
+:c.:pk.%d:epk. or :pk.%i:epk.
+:c.:pk.int:epk.
+:c.Signed decimal integer
+:row.
+:c.:pk.%u:epk.
+:c.:pk.unsigned int:epk.
+:c.Unsigned decimal integer
+:row.
+:c.:pk.%f:epk.
+:c.:pk.float:epk.
+:c.Decimal (floating-point)
+:row.
+:c.:pk.%lf:epk.
+:c.:pk.double:epk.
+:c.Long decimal (floating-point)
+:row.
+:c.:pk.%c:epk.
+:c.:pk.char:epk.
+:c.Single character
+:row.
+:c.:pk.%s:epk.
+:c.:pk.char*:epk.
+:c.Multiple characters (string)
+:row.
+:c.:pk.%p:epk.
+:c.:pk.void*:epk.
+:c.Memory address as hexadecimal
+:row.
+:c.:pk.%x:epk. or :pk.%X:epk.
+:c.:pk.int:epk.
+:c.Unsigned hexadecimal number (:pk.%X:epk. is uppercase)
+:row.
+:c.:pk.%o:epk.
+:c.:pk.int:epk.
+:c.Unsigned octal number
+:row.
+:c.:pk.%e:epk. or :pk.%E:epk.
+:c.:pk.float/double:epk.
+:c.Decimal in scientific notation
+:row.
+:c.:pk.%%:epk.
+:c.:hp1.n/a:ehp1.
+:c.Print a literal % character
+:etable.
+:backm.
+:index.
+:euserdoc.

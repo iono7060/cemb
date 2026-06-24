@@ -1,0 +1,7 @@
+This is the ELEC 3040/3050 textbook. This is intended to use the IBM Publishing Systems BookMaster package on EVIEVM, and can be formatted as follows:
+SCRIPT CEMB (OPT(BOOK4PS)
+
+BOOK4PS OPTIONS is present in this repository. Note that this uses the BookMaster Gothic font in the document; this is available at:
+http://evievm.pubvm.org/eweb/bookfnt.tar
+
+Evie Cooper, wec0007@auburn.edu
