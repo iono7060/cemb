@@ -2,7 +2,7 @@
          refstyle=default.                                                      
                                                                                 
 :zfontdef                                                                       
-         basefont='times roman'                                                 
+         basefont='helvetica'                                                   
          headfont='helvetica'                                                   
          tifont='helvetica'.                                                    
                                                                                 

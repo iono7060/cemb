@@ -95,6 +95,12 @@ Think of this like writing assembler programs with less typing!
 :li.Button:
 :p.:rk.Run:erk. 
 :eul.
+:p.This document was formatted with IBM BookMaster 1.4; the images and 
+artwork were prepared with :pv.ADMDRAW:epv. (based on an IBM GDDM 3.2 
+sample program); the text was edited with Mike Cowlishaw's LEXX. The 
+HTML version of this document was formatted with AT&T :pv.B2H:epv..
+:p.Thank you Dr. Brown, Dr. Nelson, and Dr. Nelms for their feedback 
+during the composition of this book!
 :toc.
 :figlist.
 :tlist.
@@ -803,6 +809,32 @@ int main() {                         // program starts here
 :efig.
 :p.No matter how complicated your program may be, it will 
 :hp5.always:ehp5. start in the main function -- this cannot be changed!
+:h3 id=inline.Inline Functions 
+:p.For optimization reasons, the C99 version of the language permits 
+you to create :hp2.inline functions:ehp2. that results in the assembler 
+code for the function being deposited straight into the code that 
+called the function. Here is an example inline function: 
+:i1.inline
+:fig width=column place=inline frame=rules.
+:p.Source code in file:
+:xmp.
+inline int add(int a, int b) {
+    return a + b;
+}
+ 
+int main() {
+    display(add(5, 2)); // NOTE: display() is not a real function
+}
+:exmp.
+:p.Effective code:
+:xmp.
+int main() {
+    display(5 + 2);
+}
+:exmp.
+ 
+:figcap.Inline function definition
+:efig.
 :h1 id=control.Flow Control
 :p.Inevitably, in the course of writing your program, you will want to 
 add in :hp1.branches:ehp1. for decision-making. In C, you have a 
@@ -1515,7 +1547,7 @@ void demo() {
 :efig.
 :p.Of course, the :pk.&:epk. operator passes a pointer to 
 :pv.myNumber:epv. into the :pv.increase():epv. function body.
-:h2.Function Pointers
+:h2 id=fnptr.Function Pointers
 :p.The :q.final boss:eq. of pointers is the difficult craft of 
 :hp2.function pointers.:ehp2. These are pointers that, as the name 
 implies, point to functions and allow you to call them. These are 
@@ -2440,11 +2472,13 @@ the outside world. The GPIO pins, as you learned in Computer Systems
 class, are grouped into 16-pin :hp5.ports:ehp5. wherein each pin can be 
 configured independently (but you end up accessing the entire port 
 register at the same time for each pin).
+:i1.GPIOx registers
 :h2 id=moder.Basic Pin Configuration
 :p.The STM32 device header you included includes :pv.struct:epv. 
 definitions for the various GPIO registers as well as helpful textual 
 macros that alleviate the need to type in individual bits using binary 
 literals. Some of the registers we will be using in this exercise are:
+:i2.MODER
 :ul.
 :li.The :hp5.Register and Clock Control:ehp5. register, :pk.RCC:epk.
 :ul.
@@ -2515,16 +2549,16 @@ which can be one of the following:
 :c.:hp2.AB:ehp2.
 :c.:hp2.Mode:ehp2.
 :ethd.
-:row.
+:row split=yes.
 :c.:pk.00:epk.
 :c.Input
-:row.
+:row split=yes.
 :c.:pk.01:epk.
 :c.Output
-:row.
+:row split=yes.
 :c.:pk.10:epk.
 :c.Alternate Function
-:row.
+:row split=yes.
 :c.:pk.11:epk.
 :c.Analog Mode
 :etable.
@@ -2532,7 +2566,10 @@ which can be one of the following:
 :fn.:pk.PB3:epk. corresponds to a green LED at the bottom-right of your 
 Nucleo-L432 board!
 :efn.
-The following code will do that:
+:note.You have to :hp5.clear the interesting bits beforehand:ehp5. 
+using :pk.&=:epk., then set them to what you want with :pk.|=:epk. 
+afterwards!
+:p.The following code will configure PB3 as output:
 :fig width=column place=inline frame=rules.
 :xmp.
 #include <stm32l4xx.h>
@@ -2540,7 +2577,8 @@ The following code will do that:
 void gpiosetup() {
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;   // note: GPIOB
     //   GPIOB pins:  3.2.1.0.
-    GPIOB->MODER &= ~0b11000000;           // clear bits
+    GPIOB->MODER &= &tilde.0b11000000;           // clear bits
+    GPIOB->MODER |=  0b01000000;
 }
  
 int main() {
@@ -2573,19 +2611,19 @@ data to the output. Here is a handy list containing code chunks for
 //              3210
 GPIOB->ODR |= 0b1000;
 :exmp.
- 
-:p.To clear (disable) PB3: 
-:xmp. 
-//               3210 
+:p.To clear (disable) PB3:
+:xmp.
+//               3210
 GPIOB->ODR &= &tilde.0b1000;
 :exmp.
 :figcap.Setting and clearing PB3 example
 :efig.
 :h2.Configuring and Using Inputs
 :p.First, flip back to :hdref refid=moder. and make sure you pay close 
-attention to the :pv.MODER:epv. value to declare a pin as input: 
-:pk.00:epk.. Of course, you would use the :pv.&=:epv. operation to 
-clear those bits. 
+attention to the :pv.MODER:epv. value to declare a pin as 
+input::pk.00:epk.. Of course, you would use the :pv.&=:epv. operation 
+to clear those bits. If you forget what this means, go back to 
+:hdref refid=bitwise.!
 :p.Here is an example that declares PA0 as an input:
 :fig width=column place=inline frame=rules.
 :xmp.
@@ -2594,7 +2632,7 @@ clear those bits.
 void gpiosetup() {
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;   // note: GPIOB
     //   GPIOB pins:   0.
-    GPIOB->MODER &= ~0b00;
+    GPIOB->MODER &= &tilde.0b00;
 }
  
 int main() {
@@ -2607,12 +2645,12 @@ int main() {
 :figcap.PA0 input enablement example
 :efig.
 :p.In order to actually use these, you can read the :pk.IDR:epk. 
-register like so: 
+register like so:
 :i1.Masking off (bits)
 :fig width=column place=inline frame=rules.
 :xmp.
 if(GPIOA->IDR & 0b1 == 1) {
-    // this pin is active 
+    // this pin is active
 }
 else {
     // this pin is not active
@@ -2623,36 +2661,688 @@ else {
 :p.Now, you might be asking :q.Evie, why are you ANDing the IDR value 
 with 1?:eq. Well, you want to :hp5.mask off:ehp5. bits such that you 
 only :hp1.get what you want:ehp1. 
-:lblbox.Special Pins on GPIOA 
+:lblbox.Special Pins on GPIOA
 :p.:hp2.PA14:ehp2. and :hp2.PA15:ehp2. are special, declared as inputs 
 by default, and are used to allow the debugger to communicate with the 
 :hp5.ST-LINK:ehp5. chip on the underside of the board (this is the chip 
 that drives the USB port). Because one of these is a clock and the 
-other one is a data pin, their values jitter erattically and rapidly, 
+other one is a data pin, their values jitter erratically and rapidly, 
 so you must :hp1.mask off:ehp1. the values you want when you read from 
-GPIOA! 
+GPIOA!
 :elblbox.
-:h3.Pull-Up Resistors
+:h3 id=pupd.Pull-Up and Pull-Down Resistors
+:p.Sometimes, you may wish to use a button that is just 
+:hp1.floating:ehp1. 
+:fn.This means that the button connects only to voltage or ground, 
+rather than being a bi-state button that alternates between connecting 
+its output pin to voltage or ground depending on whether or not the 
+button is pressed. Basically every button ever made if a floating 
+button!
+:efn.
+with your STM32. To do this and have it work properly, you have to 
+employ :hp2.pull-up:ehp2. or :hp2.pull-down:ehp2. resistors or the 
+button's value will seem to randomly jitter between on and off!
+:fn.This is because static electricity can build up on the 
+:hp1.gate:ehp1. of the MOSFETs comprising the :pv.IDR:epv. register, 
+causing it to twiddle between 0 and 1.
+:efn.
+Here's a simple way to know when to use each:
+:ul.
+:li.If your button is connected to :hp2.ground:ehp2., you will use a 
+:hp2.pull-up resistor:ehp2. and watch for when the :pv.IDR:epv. value 
+for the pin goes to :pk.0:epk..
+:li.If your button is connected to :hp2.voltage:ehp2., you will use a 
+:hp2.pull-down resistor:ehp2. and watch for when the :pv.IDR:epv. value 
+for the pin goes to :pk.1:epk..
+:eul.
+:note.It should be clear by now that the pull-up and pull-down 
+resistors are :hp2.tiny resistors inside the STM32 package:ehp2. and 
+not physical resistors that you have to place anywhere on your 
+breadboard!
+:note.You can only use pull-up or pull-down resistors when a pin is in 
+:hp5.input:ehp5. mode. :hp2.Pull-up and pull-down resistors do nothing 
+in output mode!:ehp2.
+:p.The following figure shows you how the inside of the STM32 is laid 
+out and how those PU/PD resistors are placed and connected:
+:fig width=column place=inline frame=rules.
+:cgraphic.
+                  Vcc
+                  &Lh.&Td.&Lh.
+                   &Lv.
+                  &Ul.&Tu.&Ur.
+                  &Lv.P&Lv.
+                  &Lv.U&Lv.
+                  &Ll.&Td.&Lr.
+                   &Lv.
+                   &Lv.
+&Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.        &Lv.       &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.
+&Lv. IDR bit &Tr.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Tl. Physical pin &Tr.&Lh.&Lh.&Lh.&Ar.
+&Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.        &Lv.       &Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.
+                   &Lv.
+                   &Lv.
+                  &Ul.&Tu.&Ur.
+                  &Lv.P&Lv.
+                  &Lv.D&Lv.
+                  &Ll.&Td.&Lr.
+                   &Lv.
+                  &Lh.&Tu.&Lh.
+                  Gnd
+:ecgraphic.
+:figcap.STM32 pull-up/pull-down resistor wiring diagram
+:efig.
+:p.If you recall from :hdref refid=moder., you'll know the general 
+:q.two-bits:eq. form of the register. The register we configure to use 
+these resistors is :pk.GPIOx->PUPDR:epk..
+:fn.:pk.PUPDR:epk. = Pull-Up/Down Register
+:efn.
+Here is a layout of the register's bits:
+:i2.PUPDR
+:fig width=column place=inline frame=rules.
+:cgraphic.
+&Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.
+&Lv. Px15  &Lv. PxNN  &Lv.  Px1  &Lv.  Px0  &Lv.
+&Tr.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Tl.
+&Lv. D &Lv. U &Lv. ..... &Lv. D &Lv. U &Lv. D &Lv. U &Lv.
+&Ll.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lr.
+:ecgraphic.
+:figcap.GPIOx_PUPDR layout
+:efig.
+:p.Given the :pk.D/U:epk. pattern, the following bit patterns are 
+possible here:
+:table cols='1i 2i'.
+:tcap.GPIO PUPDR Bit Patterns
+:thd.
+:c.:hp2.UD:ehp2.
+:c.:hp2.Mode:ehp2.
+:ethd.
+:row split=yes.
+:c.:pk.00:epk.
+:c.Neither pull-up nor pull-down
+:row split=yes.
+:c.:pk.01:epk.
+:c.Pull-up
+:row split=yes.
+:c.:pk.10:epk.
+:c.Pull-down
+:row split=yes.
+:c.:pk.11:epk.
+:c.Both (impossible state, do not use!)
+:etable.
+:p.To actually use these, you can write something like this:
+:fig width=column place=inline frame=rules.
+:xmp.
+#include <stm32l4xx.h>
+ 
+void pupdsetup() {
+    //   GPIOA pins:  1.0.
+    GPIOA->MODER |= 0b1001; // PA0 = PU, PA1 = PD
+}
+ 
+void gpiosetup() {
+    ...
+}
+ 
+int main() {
+    gpiosetup();
+    pupdsetup();
+    while(1) {
+        __asm__("wfi");
+    }
+}
+:exmp.
+:figcap.PA0 and PA1 pull-up and pull-down example
+:efig.
+:p.Now, use the pins as inputs!
+:lblbox.Pull-up Voltage Leakage
+:p.Did you know that you can actually somewhat use the pull-up and 
+pull-down resistors as a way of tricking a pin declared as input to 
+provide outputs?
+:p.You can engage the pull-up to output a logic 1, and engage the 
+pull-down to output a logic 0.
+If you use this technique, make sure you have one or the other, but not 
+both or neither, to prevent floating pins!
+:p.This may sound like useless information, but using the pull-up 
+resistors as outputs becomes very important if you need to drive a 
+:hp1.keypad:ehp1. or any such similar device!
+:elblbox.
 :h2 id=altfnc.Alternate Function Mode
+:p.Sometimes, you may wish to use all sorts of :q.fancy:eq. peripherals 
+like:
+:i2.AF/AFR
+:ul.
+:li.Serial ports:
+:ul.
+:li.UART (i.e. :q.asynchronous serial:eq.)
+:li.SPI
+:fn.Serial Peripheral Interface is :hp5.heavily:ehp5. used to drive SD 
+cards, external sensors, serial RAM and ROM chips, debuggers from other 
+manufacturers besides ST, and things like that!
+:efn.
+:li.I&sup2.C
+:li.CAN
+:fn.Controller Area Network is the serial bus often used in cars.
+:efn.
+:eul.
+:li.Timers to generate PWM (see :hdref refid=pwm.)
+:li.USB
+:eul.
+:p.You need to engage :hp2.alternate function:ehp2. mode to set these 
+up. This requires you to do :hp1.two:ehp1. things:
+:ol.
+:li.Find the bits in :pk.GPIOx->MODER:epk. and set them to :pk.10:epk. 
+like we covered in :hdref refid=moder.
+:li.Use the :hp1.correct:ehp1. :pk.GPIOx->AFR&lbrk.y&rbrk.:epk. to 
+select which alternate function you want for the pins you selected in 
+the mode register
+:eol.
+:p.The :pk.AFR:epk. register is very strange, because each I/O pin can 
+have up to :hp3.16:ehp3. alternate functions!
+If you recall from Digital Logic Circuits class, you'll know that in 
+order to count to 16 in binary (so, 0 to 15), you'll need :hp5.3:ehp5. 
+bits. That means that the :pk.AFR:epk. register is :hp1.wider:ehp1. 
+than :pk.MODER:epk., which will result in it being broken into multiple 
+chunks as an :hp5.array.:ehp5.
+:note.I say that each pin can be bound to one of 15 different alternate 
+functions, but the STM32L4 and STM32F4 series boards that you will 
+frequently encounter only provide :hp3.8:ehp3. alternate functions 
+(that is, AF0 through AF7).
+:p.Now, because there are 4 bits per pin, that means there are 
+:hp1.two:ehp1. AFRs. The STM32 manuals refer to those as 
+:pv.GPIOx_AFRL:epv. and :pv.GPIOx_AFRH:epv., but this isn't what you'll 
+refer to them as in your C program; here is a handy table that explains 
+the mapping:
+:table cols='* * *'.
+:tcap.GPIO AFRL/ARFH Mapping
+:thd.
+:c.:hp2.Bits:ehp2.
+:c.:hp2.STM32 Manual Name:ehp2.
+:c.:hp2.C Program Name:ehp2.
+:ethd.
+:row split=yes.
+:c.Px0 through Px7
+:c.:pv.GPIOx_AFRL:epv.
+:c.:pk.GPIOx->AFR&lbrk.0&rbrk.:epk.
+:row split=yes.
+:c.Px8 through Px15
+:c.:pv.GPIOx_AFRH:epv.
+:c.:pk.GPIOx->AFR&lbrk.1&rbrk.:epk.
+:etable.
+:p.So, as you can see, it's split in two in the middle and is accessed 
+like an array. Now, let us examine the layout of those two registers:
+:fig width=column place=inline frame=rules.
+:cgraphic.
+GPIOx_AFRL:
+&Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.
+&Lv.      Px7      &Lv.         &Lv.      Px0      &Lv.
+&Tr.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Tl.
+&Lv. D &Lv. C &Lv. B &Lv. A &Lv.         &Lv. D &Lv. C &Lv. B &Lv. A &Lv.
+&Ll.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lr.
+31                                        0
+ 
+GPIOx_AFRH:
+&Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.
+&Lv.      Px15     &Lv.         &Lv.      Px8      &Lv.
+&Tr.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Tl.
+&Lv. D &Lv. C &Lv. B &Lv. A &Lv.         &Lv. D &Lv. C &Lv. B &Lv. A &Lv.
+&Ll.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lr.
+31                                        0
+:ecgraphic.
+:figcap.GPIOx_AFRL and AFRH layout
+:efig.
+:p.The :pv.DCBA:epv. pattern is a :hp5.4-bit binary number:ehp5., so, 
+if you want to select alternate function 3, you would set :pv.DCBA:epv. 
+to :pv.0011:epv..
+:note.In order to figure out :hp5.what the AF mappings are for each 
+pin:ehp5., you will need to check the corresponding :hp1.device 
+datasheet:ehp1.; see :hdref refid=biblio. for more information.
+:p.Now, let us examine an example program that engages AF7 on PA9 and 
+AF7 on PA10.
+:fn.This enables the :pv.USART1:epv. interface; PA9 is transmit, and 
+PA10 is receive. Using serial ports may be useful in your Capstone 
+project!
+:efn.
+:fig width=column place=inline frame=rules.
+:xmp.
+// set PA9 and PA10 as AF; clear the interested bits first
+GPIOA->MODER &= &tilde.0b1111000000000000000000;
+GPIOA->MODER |=  0b101000000000000000000000;
+// AFR bits:        10..9...8...
+GPIOA->AFR&lbrk.1&rbrk. &= &tilde.0b111111110000;
+GPIOA->AFR&lbrk.1&rbrk. |=  0b011101110000;
+:exmp.
+:figcap.PA9 and PA10 alternate function definition example
+:efig.
+:p.Now, what you end up doing with this alternate function is up to 
+you! You will certainly use PWM in one of the lab assignments, so check 
+:hdref refid=pwm. for more information on that.
 :h2 id=analog.Analog Mode
 :h1.Interrupts
-:h1.Timers
-:h2.PWM
-:h1.ADC
+:p.One of the most useful things you will ever encounter in the world 
+of computing is that of the :hp2.interrupt.:ehp2. The purpose of an 
+interrupt is to :hp1.temporarily stop the execution of a program, jump 
+to a certain function, run some code, and return back to where you left 
+off:ehp1. when :hp1.an input event or software trigger occurs.:ehp1.
+:p.In the world of embedded systems, an :q.input event:eq. can be a 
+button press, timer counter limit hit, data coming in over a serial 
+interface, or a system interval timer; a :q.software trigger:eq. only 
+really occurs when you are running a real operating system.
+:fn.For those curious and for those who did not pay much attention in 
+Operating Systems class, a :hp5.system call:ehp5. is implemented using 
+an interrupt that your user programs :q.simulate:eq. using some kind of 
+CPU instruction.
+:efn.
+:p.This section will cover interrupts as they relate to push buttons 
+and other such momentary inputs; we will not be debouncing the button 
+or anything with this code!
+:p.Let us connect a push button to PA1. We will connect it like this:
+:fig width=column place=inline frame=rules.
+:p.Using the WaveForms board:
+:cgraphic.
+BTN1 &Al.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ar. PA1
+:ecgraphic.
+:p.Using a real button:
+:cgraphic.
+VCC
+&Lh.&Td.&Lh.
+ &Lv.
+ &Lv.
+ &Lv.        &Lv.
+ &Lv.      &Lh.&Lh.&Tu.&Lh.&Lh.
+ &Lv.      &Au.   &Au.
+ &Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.   &Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ar. PA1
+:ecgraphic.
+:figcap.Button on PA1
+:efig.
+:note.If you are following this section to configure interrupts for 
+your lab assignment(s), you will want to use the :hp1.first:ehp1. 
+circuit wherein you use the :pk.BTN1:epk. output of the WaveForms board 
+and wire it straight into PA1 on your STM32.
+:p.:warning.Make sure all of the voltage switches on your WaveForms 
+board are up; these are located at the top right of the white portion 
+of the breadboard, the part that you take out of the board and take 
+home after every lab!:ewarning.
+:p.Now that you've decided that you want to use PA1, you need to do the 
+following things to actually enable and use the interrupt:
+:ol.
+:li.Configure the GPIO pin that the button is wired to (PA1) as an 
+input.
+:li.If you are using a real button, enable the :hp1.pull-down 
+resistor:ehp1. on PA1.
+:fn.See :hdref refid=pupd. for help with this!
+:efn.
+:li.Determine which EXTI interrupt line you need to enable in the NVIC.
+:li.Set the flags for the EXTI line (:pk.FTSR1:epk., :pk.PR1:epk., 
+and:pk.IMR1:epk.) for a falling-edge-triggered interrupt.
+:li.Enable the EXTI IRQ in the NVIC.
+:li.Write an IRQ handler function.
+:eol.
+:h2.Understanding the NVIC
+:p.Before we proceed, it is very helpful to know how exactly the 
+:hp2.NVIC:ehp2. 
+:fn.Nested Vectored Interrupt Controller
+:efn.
+works for the EXTI interrupts. See the following diagram for an example 
+of how each GPIO pin results in an EXTI interrupt being generated:
+:fig width=column place=inline frame=rules.
+:artwork name=nvicexti.
+:figcap.NVIC EXTI flow
+:efig.
+:p.As you can see, all of the GPIO pins numbered 0 can result in the 
+production of the :pv.EXTI0:epv. interrupt. This means that PC3 would 
+result in the production of the :pv.EXTI3:epv. interrupt, and PA1 will 
+result in the production of :pv.EXTI1:epv..
+:p.It should be noted that there are :hp1.many:ehp1. other interrupts 
+the NVIC provides:
+:ul.
+:li.Core CPU interrupts: faults, system service call (SVC), the SysTick 
+timer, non-maskable interrupt (NMI)
+:li.External interrupts (EXTI)
+:li.DMA completion interrupts
+:li.Timers (see :hdref refid=timers.)
+:li.Serial interface controllers: SPI, I&sup2.C, CAN, USB
+:li.ADC completion interrupts (see :hdref refid=adc.)
+:li.DAC completion interrupts
+:eul.
+:p.In this chapter, we are only looking at the EXTI interrupts!
+:h2.Configuring Input Interrupts 
+:p.Now that you understand the NVIC, let us proceed!
+:h3.Configuring the EXTICR Register
+:p.Before we can configure the interrupt properties of PA1, we must 
+first enable it in the :pk.SYSCFG->EXTICR:epk. register. This, much in 
+the same way the :pk.GPIOx->AFR:epk. register, is split into two. Just 
+like the :pv.AFR:epv. register, each entry comprises :hp2.4:ehp2. bits 
+(but only :hp2.3:ehp2. of which are actually used). There are a total 
+of :hp2.4:ehp2. :pv.EXTICR:epv. registers, laid out as follows:
+:fig width=column place=inline frame=rules.
+:cgraphic.
+SYSCFG_EXTICR1:
+&Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.
+&Lv.      Px7      &Lv.         &Lv.      Px0      &Lv.
+&Tr.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Tl.
+&Lv. x &Lv. C &Lv. B &Lv. A &Lv.         &Lv. x &Lv. C &Lv. B &Lv. A &Lv.
+&Ll.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lr.
+15                   .                    0
+                     .
+                     .
+ 
+SYSCFG_EXTICR4:
+&Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.
+&Lv.      Px15     &Lv.         &Lv.      Px8      &Lv.
+&Tr.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Tl.
+&Lv. D &Lv. C &Lv. B &Lv. A &Lv.         &Lv. D &Lv. C &Lv. B &Lv. A &Lv.
+&Ll.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lh./&Lh.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lr.
+15                                        0
+:ecgraphic.
+:figcap.SYSCFG_EXTICRx register layout
+:efig.
+:note.Only bits 0 to 15 are used in these registers, and the :pk.x:epk. 
+means the bit is :q.dead:eq. and does not do anything!
+:p.Here is a handy table that maps the four registers to their STM32 
+manual name and C program variable name:
+:table cols='* * *'.
+:tcap.EXTICRx Mapping
+:thd.
+:c.:hp2.EXTI:ehp2.
+:c.:hp2.STM32 Manual Name:ehp2.
+:c.:hp2.C Program Name:ehp2.
+:ethd.
+:row split=yes.
+:c.0 through 3
+:c.:pv.SYSCFG_EXTICR1:epv.
+:c.:pk.SYSCFG-&gtsym.EXTICR&lbrk.0&rbrk.:epk.
+:row split=yes.
+:c.4 through 7
+:c.:pv.SYSCFG_EXTICR2:epv.
+:c.:pk.SYSCFG-&gtsym.EXTICR&lbrk.1&rbrk.:epk.
+:row split=yes.
+:c.8 through 11
+:c.:pv.SYSCFG_EXTICR3:epv.
+:c.:pk.SYSCFG-&gtsym.EXTICR&lbrk.2&rbrk.:epk.
+:row split=yes.
+:c.12 through 15
+:c.:pv.SYSCFG_EXTICR4:epv.
+:c.:pk.SYSCFG-&gtsym.EXTICR&lbrk.3&rbrk.:epk.
+:etable.
+:p.So, there are two ways to populate the bits of the :pv.EXTICR:epv. 
+register you need to write to (which, for our PA1 interrupt, is 
+:pk.SYSCFG->EXTICR 0¡:epk.):
+:ol.
+:li.By directly writing the bits
+:li.Using the macro bitmask names
+:fn.These are defined in :pv.stm32l4xx.h:epv.; you can right-click any 
+of these terms after typing them in STM32CubeIDE and click the :q.Go to 
+Definition:eq. button to see what these resolve to (with binary 
+immediate or bit-shift patterns).
+:efn.
+ 
+:eol.
+:p.Here is a sample of both:
+:i1.EXTICR
+:fig width=column place=inline frame=rules.
+:xmp.
+// using macro bitfield names; clearing first, then selecting PA
+SYSCFG->EXTICR&lbrk.0&rbrk. &= &tilde.SYSCFG_EXTICR1_EXTI1;
+SYSCFG->EXTICR&lbrk.0&rbrk. |= SYSCFG_EXTICR1_EXTI1_PA;
+// using bits directly:
+SYSCFG->EXTICR&lbrk.0&rbrk. &= &tilde.0b01110000;
+SYSCFG->EXTICR&lbrk.0&rbrk. |= 0b00010000;
+:exmp.
+:figcap.EXTICR PA1 selection example
+:efig.
+:note.Make sure PA1 has been declared as an input :hp1.before:ehp1. 
+proceeding (see :hdref refid=moder. for a refresher on this).
+:h3.Setting the Interrupt Flags
+:p.At this point, the NVIC has :q.routed:eq. the line from PA1, but we 
+have not yet selected a rising-edge or falling-edge interrupt; 
+likewise, we have not connected the EXTI block to the NVIC -- we have 
+also not cleared the Pending Interrupt Flag that will raise the moment 
+the interrupt is enabled. We will connect it after this.
+:p.There are a number of registers in the :pk.EXTI:epk. struct that we 
+are interested in: 
+:i1.EXTI 
+:i2.FTSR/RTSR 
+:i2.PIF 
+:i2.IMR/EMR
+:table cols='1i *'.
+:thd.
+:c.:hp2.Register:ehp2.
+:c.:hp2.Description:ehp2.
+:ethd.
+:row split=yes.
+:c.:pk.EXTI->IMR1:epk.
+:c.:hp1.Interrupt Mask Register,:ehp1. which connects and
+disconnects the GPIO pin to the NVIC line
+:row split=yes.
+:c.:pk.EXTI->EMR1:epk.
+:c.:hp1.Event Mask Register,:ehp1. which completely disables
+event and interrupt generation (by default, every event is
+:hp5.enabled:ehp5.)
+:row split=yes.
+:c.:pk.EXTI->RTSR1:epk.
+:c.:hp1.Rising Trigger Selection Register,:ehp1. which enables
+rising-edge interrupts for each GPIO line
+:row split=yes.
+:c.:pk.EXTI->FTSR1:epk.
+:c.:hp1.Falling Trigger Selection Register,:ehp1. which enables
+falling-edge interrupts for each GPIO line
+:row split=yes.
+:c.:pk.EXTI->SWIER1:epk.
+:c.:hp1.Software Interrupt Event Register,:ehp1. wherein writing
+a bit to the correct slot will result in the generation of an
+interrupt by your program
+:row split=yes.
+:c.:pk.EXTI->PR1:epk.
+:c.:hp1.Pending Register,:ehp1. wherein writing a 1 to the correct
+slot :q.dismisses:eq. an interrupt (you will need to do this in your
+IRQ handler function)
+:etable.
+:note.Just like there is an :pk.FTSR1:epk., there is also 
+an:pk.FTSR2:epk. for additional interrupts -- you won't be using this, 
+though!
+:p.These registers are laid out as follows:
+:fig width=column place=inline frame=rules.
+:cgraphic.
+EXTI_RTSR1:
+&Ul.&Lh.&Lh.&Lh.&Td.&Lh./&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Ur.
+&Lv. 31| / &Lv. 3 | 2 | 1 | 0 &Lv. Interrupt Number
+&Tr.&Lh.&Lh.&Lh.&Ju.&Lh./&Lh.&Ju.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Tl.
+&Lv. E &Lv. / &Lv. E &Lv. E &Lv. E &Lv. E &Lv.
+&Ll.&Lh.&Lh.&Lh.&Tu.&Lh./&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lr.
+31                      0
+ 
+EXTI_FTSR1:
+&Ul.&Lh.&Lh.&Lh.&Td.&Lh./&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Ur.
+&Lv. 31| / &Lv. 3 | 2 | 1 | 0 &Lv.
+&Tr.&Lh.&Lh.&Lh.&Ju.&Lh./&Lh.&Ju.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Tl.
+&Lv. E &Lv. / &Lv. E &Lv. E &Lv. E &Lv. E &Lv.
+&Ll.&Lh.&Lh.&Lh.&Tu.&Lh./&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lr.
+31                      0
+ 
+EXTI_IMR1:  
+&Ul.&Lh.&Lh.&Lh.&Td.&Lh./&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Ur.
+&Lv. 31| / &Lv. 3 | 2 | 1 | 0 &Lv.
+&Tr.&Lh.&Lh.&Lh.&Ju.&Lh./&Lh.&Ju.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Tl.
+&Lv. E &Lv. / &Lv. E &Lv. E &Lv. E &Lv. E &Lv.
+&Ll.&Lh.&Lh.&Lh.&Tu.&Lh./&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lr.
+31                      0
+ 
+EXTI_PR1:   
+&Ul.&Lh.&Lh.&Lh.&Td.&Lh./&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Td.&Lh.&Lh.&Lh.&Ur.
+&Lv. 31| / &Lv. 3 | 2 | 1 | 0 &Lv.
+&Tr.&Lh.&Lh.&Lh.&Ju.&Lh./&Lh.&Ju.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Ju.&Lh.&Lh.&Lh.&Tl.
+&Lv. E &Lv. / &Lv. E &Lv. E &Lv. E &Lv. E &Lv.
+&Ll.&Lh.&Lh.&Lh.&Tu.&Lh./&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Tu.&Lh.&Lh.&Lh.&Lr.
+31                      0
+ 
+:ecgraphic.
+:figcap.EXTI register layouts
+:efig.
+:p.So, if we want a :hp1.falling-edge interrupt,:ehp1. you will need to 
+alter :pk.EXTI->FTSR1:epk., :pk.EXTI->PR1:epk., and :pk.EXTI->IMR1:epk.
+:p.Here is some code that will do that:
+:fig width=column place=inline frame=rules.
+:xmp.
+EXTI->FTSR1 |= EXTI_FTSR1_FT1;
+EXTI->PR1 |= EXTI_PR1_PIF1;
+EXTI->IMR1 |= EXTI_IMR1_IM1;
+:exmp.
+:figcap.PA1 interrupt flags configuration example
+:efig.
+:p.For PA5, you would replace the last number before the semicolon with 
+5, so, :pk.EXTI_FTSR1_FT5:epk.. 
+:h3.Enabling the Interrupt in the NVIC 
+:p.Next, you need to use two macro-functions
+:fn.These are functions defined with the :pk.inline:epk. keyword; you 
+can learn about that by reading :hdref refid=inline..
+:efn.
+to tell the NVIC to unblock the path from the EXTI block to the NVIC 
+block: 
+:fig width=column place=inline frame=rules.
+:xmp.
+NVIC_ClearPendingIRQ(EXTI1_IRQn);
+NVIC_EnableIRQ(EXTI1_IRQn);
+:exmp.
+ 
+:figcap.NVIC interrupt enablement example
+:efig.
+:p.This part is fairly simple! Note that the syntax of this really does 
+say :pk.EXTI1_IRQn:epk.; you can see the :pk.1:epk. there is the 
+variable part, so if you were using an interrupt on PB6, you would use 
+:pk.EXTI6_IRQn:epk.. Before the program can run, though, you must run 
+one more function to enable :hp1.all:ehp1. interrupts on the CPU 
+globally:  
+:fig width=column place=inline frame=rules.
+:p.Using the C function:
+:xmp.__enable_irq();
+:exmp.
+:p.Using inline assembly: 
+:xmp.__asm__("cpsie i");
+:exmp.
+ 
+:figcap.Global interrupt enablement
+:efig.
+:note.There are :hp3.two underscores:ehp3. on both of those! 
+:h3.Writing the ISR 
+:p.Now that the interrupt can (in theory) fire, you need to write a 
+function that the CPU will jump to. This is our :hp2.interrupt service 
+routine:ehp2., or ISR for short. These have a :hp5.specific:ehp5. name 
+that you cannot deviate from (see the info-box after the code sample 
+for an explanation as to why this is the case)! 
+:i1.ISR
+:p.Since we are using :pv.EXTI1:epv. because we want PA1 to be our 
+interrupt pin, we have to write a function named 
+:pk.EXTI1_IRQHandler:epk. and it will have a :pv.void:epv. return type. 
+:p.Here is the general form of an EXTI ISR: 
+:fig width=column place=inline frame=rules.
+:xmp.
+#include <stm32l4xx.h> 
+void gpiosetup() { 
+     
+void EXTI1_IRQHandler() {
+    NVIC_ClearPendingIRQ(EXTI1_IRQn); // flush pending interrupts 
+    // do something here with your button... 
+    EXTI->PR1 |= EXTI_PR1_PIF1;       // we have processed the IRQ
+} 
+:exmp.
+ 
+:figcap.EXTI IRQ handler function example
+:efig.
+:p.At this point, you're done! After the info-box, I will provide you 
+with a complete code sample for more than one interrupt in case you 
+think you forgot something. 
+:lblbox.How are the IRQ Handler Functions Accessed? 
+:p.In your :pk.startup.s:epk. file (provided by the STM32Cube 
+development toolchain), there is a :hp1.function vtable:ehp1. 
+consisting of an array of function pointers (see :hdref refid=fnptr.) 
+stored at a very specific memory address. 
+:p.When the EXTI1 interrupt comes in, the CPU will convert that into a 
+numeric index to that function pointer array, extract that memory 
+address, and then jump into that function (after saving the return 
+address it needs to get back to what it was doing beforehand).  
+:elblbox.
+:h3.Summary and Complete Example 
+:p.This enables PA1 and PA2 as interrupts. 
+:fig width=column place=inline frame=rules.
+:xmp keep=5.
+#include <stm32l4xx.h> 
+ 
+void gpiosetup() {
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+    GPIOA->MODER &= &tilde.0b1111; // clear for input
+}
+ 
+void intsetup() { 
+    // EXTICR input selection
+    SYSCFG->EXTICR&lbrk.0&rbrk. &= &tilde.SYSCFG_EXTICR1_EXTI1;
+    SYSCFG->EXTICR&lbrk.0&rbrk. |= SYSCFG_EXTICR1_EXTI1_PA;
+    SYSCFG->EXTICR&lbrk.0&rbrk. &= &tilde.SYSCFG_EXTICR1_EXTI2;
+    SYSCFG->EXTICR&lbrk.0&rbrk. |= SYSCFG_EXTICR1_EXTI2_PA;
+    // flag configuration
+    EXTI->FTSR1 |= EXTI_FTSR1_FT1;
+    EXTI->PR1 |= EXTI_PR1_PIF1;
+    EXTI->IMR1 |= EXTI_IMR1_IM1;
+    EXTI->FTSR1 |= EXTI_FTSR1_FT2;
+    EXTI->PR1 |= EXTI_PR1_PIF2;
+    EXTI->IMR1 |= EXTI_IMR1_IM2;
+    // NVIC enablement
+    NVIC_ClearPendingIRQ(EXTI1_IRQn);
+    NVIC_EnableIRQ(EXTI1_IRQn);
+    NVIC_ClearPendingIRQ(EXTI2_IRQn);
+    NVIC_EnableIRQ(EXTI2_IRQn);
+    // enable interrupts
+    __enable_irq();
+} 
+ 
+void EXTI1_IRQHandler() {
+    NVIC_ClearPendingIRQ(EXTI1_IRQn); // flush pending interrupts 
+    // do something here with your button... 
+    EXTI->PR1 |= EXTI_PR1_PIF1; // we have processed the IRQ
+} 
+ 
+void EXTI2_IRQHandler() {
+    NVIC_ClearPendingIRQ(EXTI2_IRQn); // flush pending interrupts 
+    // do something here with your button... 
+    EXTI->PR1 |= EXTI_PR1_PIF2; // we have processed the IRQ
+} 
+ 
+int main() {
+    gpiosetup();
+    intsetup();
+    while(1) {
+        __asm__("wfi");
+    }
+}
+:exmp.
+ 
+:figcap.Complete EXTI GPIO example
+:efig.
+:h1 id=timers.Timers
+:h2 id=pwm.PWM
+:h1 id=adc.ADC
 :appendix.
-:h2 id=biblio.Bibliography
+:h1 id=biblio.Bibliography
 :p.The following other books will be extensively useful in your studies:
 :ul.
-:li.:hp2.RM0394 Reference Manual:ehp2. -- contains all of the 
-configuration registers and their corresponding bits
-:li.:hp2.STM32L432KC Datasheet:ehp2. -- contains a table of alternate 
-function pins
+:li.:hp2.RM0394 Reference Manual:ehp2. -- for the following parts: 
+STM32L41xxx, 42xxx, 43xxx, 44xxx, 45xxx, 46xxx
+:p.STMicroelectronics. :hp1.R0394 Reference manual.:ehp1. ST Manuals, 
+December 2024.
+:li.:hp2.RM0090 Reference Manual:ehp2. -- for the following parts: 
+STM32F405/415, STM32F407/417, STM32F427/437 and STM32F429/439
+:p.STMicroelectronics. :hp1.R0090 Reference manual.:ehp1. ST Manuals, 
+May 2026.
+:li.:hp2.STM32L432KC Datasheet:ehp2.
+:p.STMicroelectronics. :hp1.STM32L432KB, STM32L432KC.:ehp1. ST Manuals, 
+May 2018.
+:li.:hp2.STM32F411VE Datasheet:ehp2.
+:p.STMicroelectronics. :hp1.STM32F411xC, STM32F411xE.:ehp1. ST Manuals, 
+January 2024.
 :eul.
-:h2 id=mxproj.Creating STM32CubeMX/IDE Projects
+:h1 id=mxproj.Creating STM32CubeMX/IDE Projects
 :p.Here is an outline of steps required to create an STM32 project.
 :ol prefix='setup checkoff'.
 :li.Create a directory
-:fn.A :q.directory:eq. is a :hp5.folder:ehp5.; tthis term is more 
+:fn.A :q.directory:eq. is a :hp5.folder:ehp5.; this term is more 
 frequently heard amongst programmers!
 :efn.
 in one of the following locations:
@@ -2662,7 +3352,7 @@ in one of the following locations:
 :li.:hp3.NOT:ehp3. the root of the :pk.C:\:epk. drive!!
 :eul.
 :li.Open :hp2.STM32CubeMX:ehp2. from the Start menu.
-:li.Click :rk.File:epk., then :rk.New Project...:erk.
+:li.Click :rk.File:erk., then :rk.New Project...:erk.
 :li.Several dialog boxes downloading files will appear, just let those 
 run.
 :li.In :q.Commercial Part Number:eq., enter the STM32 model:
@@ -2699,7 +3389,7 @@ though!
 :li.STM32CubeIDE will open, permitting you to continue with the rest of 
 your lab.
 :eol.
-:h2 id=fstring.Format Specifiers
+:h1 id=fstring.Format Specifiers
 :p.These are used in the :pk.printf:epk. and :pk.scanf:epk. family of C 
 library functions; only :pk.scanf:epk. is available on the STM32 target 
 C library in :pk.string.h:epk..
@@ -2710,51 +3400,180 @@ C library in :pk.string.h:epk..
 :c.:hp2.Type:ehp2.
 :c.:hp2.Description:ehp2.
 :ethd.
-:row.
+:row split=yes.
 :c.:pk.%d:epk. or :pk.%i:epk.
 :c.:pk.int:epk.
 :c.Signed decimal integer
-:row.
+:row split=yes.
 :c.:pk.%u:epk.
 :c.:pk.unsigned int:epk.
 :c.Unsigned decimal integer
-:row.
+:row split=yes.
 :c.:pk.%f:epk.
 :c.:pk.float:epk.
 :c.Decimal (floating-point)
-:row.
+:row split=yes.
 :c.:pk.%lf:epk.
 :c.:pk.double:epk.
 :c.Long decimal (floating-point)
-:row.
+:row split=yes.
 :c.:pk.%c:epk.
 :c.:pk.char:epk.
 :c.Single character
-:row.
+:row split=yes.
 :c.:pk.%s:epk.
 :c.:pk.char*:epk.
 :c.Multiple characters (string)
-:row.
+:row split=yes.
 :c.:pk.%p:epk.
 :c.:pk.void*:epk.
 :c.Memory address as hexadecimal
-:row.
+:row split=yes.
 :c.:pk.%x:epk. or :pk.%X:epk.
 :c.:pk.int:epk.
 :c.Unsigned hexadecimal number (:pk.%X:epk. is uppercase)
-:row.
+:row split=yes.
 :c.:pk.%o:epk.
 :c.:pk.int:epk.
 :c.Unsigned octal number
-:row.
+:row split=yes.
 :c.:pk.%e:epk. or :pk.%E:epk.
 :c.:pk.float/double:epk.
 :c.Decimal in scientific notation
-:row.
+:row split=yes.
 :c.:pk.%%:epk.
 :c.:hp1.n/a:ehp1.
 :c.Print a literal % character
 :etable.
 :backm.
+:glossary.
+:gl.
+:grpsep.A
+:gt.Asynchronous
+:gd.If an event is asynchronous, you can do other things while you wait 
+for the event to complete. DMA is asynchronous.
+:gt.ADC
+:gd.Analog-to-Digital Converter. Samples an analog signal at specific 
+times and converts it into a numeric representation.
+:gt.ARM
+:gd.Advanced RISC Machine (originally Acorn RISC Machines, after the 
+English computer company), the CPU architecture that the STM32 
+implements.
+:grpsep.B
+:gt.Bouncing
+:gd.Unwanted jittering when a button is being pressed or released that 
+may result in excessive interrupt generation or unstable control signal 
+input.
+:grpsep.C
+:gt.CAN
+:gd.Controller Area Network. A multi-device bus-type network frequently 
+used in automobiles and other such similar control systems.
+:grpsep.D
+:gt.DAC
+:gd.Digital-to-Analog Converter. Takes a 12-bit decimal value and 
+outputs a high-accuracy analog voltage.
+:gt.Debounce
+:gd.The act of removing multiple back-to-back button pressing events 
+when a physical button is pressed (as the name implies, you have to 
+remove "bouncing" from the button output signal)
+:gt.Debugger
+:gd.In the context of embedded systems, a debugger is a device that can 
+stop and start the CPU, alter its memory, alter its flash, and possibly 
+inspect CPU registers (and sometimes even peripheral registers).
+:gt.DMA
+:gd.Direct Memory Access. An additional component of the CPU can 
+perform memory copying operations or peripheral driving operations 
+asynchronously without the CPU intervening at all. The completion of a 
+DMA event usually results in the generation of an interrupt.
+:gt.Duty cycle
+:gd.The percentage in which a square wave is turned "on", wherein a 50% 
+duty cycle looks like a normal square wave.
+:grpsep.E
+:gt.EXTI
+:gd.External Interrupt. When a GPIO pin is allowed to flow to the CPU 
+and generate an interrupt (by configuring the NVIC and EXTI register 
+blocks), you are generating an EXTI event.
+:grpsep.F
+:gt.Full-duplex
+:gd.A serial interface that permits communication in both directions 
+simultaneously. UART is full-duplex.
+:grpsep.G
+:gt.GPIO
+:gd.General Purpose Input/Output, I/O pins that connect the 
+microcontroller to the outside world.
+:grpsep.H
+:gt.Half-duplex
+:gd.A serial interface that does not permit communication in both 
+directions simultaneously. I&sup2.C is half-duplex.
+:grpsep.I
+:gt.Interrupt
+:gd.A signal that pauses the CPU execution, saves the PC (program 
+counter) register, runs a function, then restores the PC register and 
+resumes normal execution. Interrupts are handled by ISRs.
+:gt.I&sup2.C
+:gd.Inter-Integrated Circuit, a low-speed serial device interface that 
+requires only a clock and bidirectional data pin; this is a 
+:hp1.half-duplex:ehp1. interface.
+:gt.IRQ
+:gd.Interrupt Request, an event that generates an interrupt.
+:gt.ISR
+:gd.Interrupt Service Routine, a function that the CPU jumps to 
+whenever an interrupt fires.
+:grpsep.N
+:gt.NMI
+:gd.Non-Maskable Interrupt, an interrupt that cannot be disabled and is 
+usually triggered when the device malfunctions.
+:gt.NVIC
+:gd.Nested Vectored Interrupt Controller, the standard interrupt 
+controller block found on :hp1.ARM Cortex-M:ehp1. series 
+microcontroller CPUs.
+:grpsep.P
+:gt.PWM
+:gd.Pulse-Width-Modulation. A simple way of getting a quasi-analog 
+signal with a variable voltage from a bilevel (i.e. on or off) digital 
+I/O pin by modulating the :hp1.duty cycle:ehp1. of the pin.
+:gt.PC
+:gd.Program Counter. This is the :hp1.register:ehp1. that holds the 
+memory address of the currently-executing CPU instruction.
+:grpsep.R
+:gt.Register
+:gd.32-bit high-speed fields within the CPU that is the fundamental 
+working storage for the CPU; see your notes from Computer Systems for 
+more information.
+:grpsep.S
+:gt.Synchronous
+:gd.If an event is synchronous, you must wait for it to finish before 
+you can move onto the next event.
+:gt.SysTick
+:gd.A special interrupt generated by an integral timer derived stably 
+from the oscillator that provides the CPU clock. Used for the scheduler 
+jiffy clock of an operating system or any number of tasks wherein you 
+might need an event that fires repeatedly.
+:gt.SPI
+:gd.Serial Peripheral Interface. Many peripherals use SPI, ranging from 
+ultrasonic range sensors, some microphones, RAM and ROM chips, SD 
+cards, some character displays, and other devices of this nature.
+:gt.ST-LINK
+:gd.The :hp1.debugger:ehp1. included on STM32 development boards. If 
+you are designing your own STM32-based board, you will need to either 
+get an external ST-LINK box or add the chip directly onto your board.
+:gt.STMicroelectronics
+:gd.The company that made the STM32 microcontroller.
+:gt.SVC
+:gd.Supervisor Call, an interrupt that a user program will generate 
+using a software interrupt generation CPU instruction that jumps into 
+the operating system (the "supervisor") to handle a system call.
+:grpsep.U
+:gt.UART
+:gd.Universal Asynchronous Receiver/Transmitter, the standard serial 
+interface found on PCs and all manner of communication devices.
+Sometimes, it may be :hp5.synchronous:ehp5., wherein it becomes a 
+:hp2.USART:ehp2. (which is what the STM32 has).
+:gt.USART
+:gd.See UART.
+:grpsep.V 
+:gt.vtable 
+:gd.A colloquial name for an array of function pointers.
+:egl.
 :index.
 :euserdoc.
