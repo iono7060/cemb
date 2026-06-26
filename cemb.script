@@ -2996,7 +2996,7 @@ the NVIC provides:
 :ul.
 :li.Core CPU interrupts: faults, system service call (SVC), the SysTick 
 timer, non-maskable interrupt (NMI)
-:li.External interrupts (EXTI)
+:li.External interrupts (EXTI) -- :hp1.covered in this section:ehp1.
 :li.DMA completion interrupts
 :li.Timers (see :hdref refid=timers.)
 :li.Serial interface controllers: SPI, I&sup2.C, CAN, USB
@@ -3317,7 +3317,307 @@ int main() {
 :figcap.Complete EXTI GPIO example
 :efig.
 :h1 id=timers.Timers
-:h2 id=pwm.PWM
+:p.Sometimes, you want to provide repeating events
+:fn.i.e. interrupts
+:efn.
+to a computer. Some of these cases may look like this: 
+:ul.
+:li.Take a reading from a sensor 
+:li.Check to see if an asynchronous operation has completed 
+:li.Measure how long something is taking 
+:li.Generate a PWM signal (this will be covered later; see 
+:hdref refid=pwm.) 
+:eul.
+:h2.Understanding the Timers
+:p.The STM32 has several programmable timers, which will 
+:hp5.count:ehp5. based on one of two different inputs: 
+:i1.Timers
+:ol.
+:li.An oscillator clock signal
+:fn.This will be derived by a :hp2.clock divider:ehp2., which will be 
+covered when we discuss the :hp1.prescaler:ehp1.. 
+:efn.
+:li.Some kind of repeating event
+:fn.Like button presses. Note that not all of the timers can be 
+connected to an arbitrary input pin and instead must be connected to a 
+clock like option #1!
+:efn.
+:eol.
+:h4 id=timevt.Event Types
+:p.So, you have two :hp5.event sources:ehp5. and those pulses will 
+increment a (pre-settable) counter. Once the counter reaches a 
+:hp5.threshold value:ehp5. (called the :hp2.autoreload value:ehp2.), 
+one of two things will happen: 
+:i2.Event types
+:ol.
+:li.The counter will be zeroed 
+:li.An event will be generated: 
+:ul.
+:li.A :q.counter full:eq. flag will be set (this can be checked by your 
+code) 
+:li.An interrupt will fire (you do need to dismiss the :q.counter 
+full:eq. flag, though) 
+:li.The output state of an I/O pin will toggle
+:fn.This is PWM mode, which will be covered next; see :hdref refid=pwm..
+:efn.
+:eul.
+:eol.
+:note.Some timers can count upwards :hp1.and:ehp1. downwards! 
+:h3.STM32L4xx Timers 
+:p.The following timers are present on the STM32L432xxx board: 
+:table cols='1i 0.5i 1i 1i' id=timtbl.
+:tcap.STM32L432xxx Timers 
+:thd.
+:c.:hp2.Timer:ehp2.
+:c.:hp2.Bits:ehp2.
+:c.:hp2.Direction:ehp2.
+:c.:hp2.Channels:ehp2. 
+:ethd.
+:row.
+:c.:pv.TIM1:epv.
+:c.16 
+:c.up/down 
+:c.4 
+:row.
+:c.:pv.TIM2:epv.
+:c.32 
+:c.up/down 
+:c.4
+:row.
+:c.:pv.TIM3:epv.
+:c.32 
+:c.up/down 
+:c.4
+:row.
+:c.:pv.TIM6:epv.
+:c.16 
+:c.up
+:c.0
+:row.
+:c.:pv.TIM7:epv.
+:c.16 
+:c.up
+:c.0
+:row.
+:c.:pv.TIM15:epv.
+:c.16 
+:c.up
+:c.2
+:row.
+:c.:pv.TIM16:epv.
+:c.16 
+:c.up
+:c.1
+:row.
+:c.SysTick
+:c.24 
+:c.up
+:c.0
+:row.
+:c.:pv.LPTIM1:epv.
+:c.16
+:c.up
+:c.0
+:row.
+:c.:pv.LPTIM2:epv.
+:c.16
+:c.up
+:c.0
+:etable.
+:note.The :pv.LPTIMx:epv. timers are :hp5.low-power timers:ehp5. that 
+can run while the CPU is stalled (as such, they are capable of 
+restarting the CPU while it's powered down).
+:i2.Standard timers (TIMx)
+:i2.Low-power timer (LPTIMx) 
+:i2.SysTick timer 
+:p.The :hp2.channel:ehp2. is what defines the function of a timer when 
+it is being used for something :hp1.besides:ehp1. interrupt generation. 
+The channels can be set to one of three modes: 
+:i2.Channel 
+:i3.Input capture 
+:i3.Output compare  
+:ol.
+:li.Input capture (counting button presses, for example) 
+:li.Output compare (triggering an interrupt when the counter counts to 
+a certain value, for example 
+:li.PWM (generating a pseudoanalog waveform) 
+:eol.
+:h3.Clock Division: SYSCLK and PSC/AAR 
+:p.Unless you have connected a timer's input to an input pin (in input 
+capture mode), you will need to utilize a :hp2.clock divider:ehp2. to 
+provide an input event source. As you might imagine, the clock divider 
+is dividing the :hp2.master system clock:ehp2.  
+:i2.Clock divider 
+:p.In order to derive a timer frequency, you must set two things: 
+:ol.
+:li.The system master clock, :pk.SYSCLK:epk.
+:li.The prescaler for the timer, :pk.TIMx->PSC:epk.
+:li.While it does not alter the timer frequency: the autoreload 
+register, :pk.TIMx->ARR:epk. 
+:fn.The ARR doesn't alter the timer's frequency, but it does control 
+what the :q.trigger value:eq. the timer must count up to before 
+something happens. 
+:efn.
+:eol.
+:i3.SYSCLK 
+:i3.PSC 
+:i3.ARR
+:p.Now, SYSCLK can be derived from four different sources: 
+:ol.
+:li.:hp2.MSI:ehp2. (multi-speed internal): a 100 kHz to 48 MHz clock, 
+:hp5.defaults to 4 MHz unless otherwise changed:ehp5.
+:p.This is the SYSCLK mode we will be using; you do not have to do 
+anything to engage it or alter it.  
+:li.:hp2.HSI:ehp2. (high-speed internal): 16 MHz  
+:p.To enable this, you must do: 
+:xmp.
+RCC->CR |= RCC_CR_HSION;               // power it up 
+while((RCC->CR & RCC_CR_HSIRDY) == 0); // wait for readiness 
+RCC->CFGR |= RCC_CFGR_SW_HSI;          // SYSCLK is now HSI 
+:exmp.
+:li.:hp2.HSE:ehp2. (high-speed external): 4 MHz to 48 MHz 
+:p.This requires you to connect a clock signal of some kind to pin PA0; 
+this signal can be generated by a signal generator in a lab, a 
+crystal-oscillator clock generator chip, or a monolithic square-wave 
+crystal oscillator pagkage. 
+:li.:hp2.PLL:ehp2. (phase-locked loop): multiplies one of the above 
+clocks by some factor (permits :hp2..clock scaling:ehp2. in software)
+:eol.
+:p.For our 3040/3050 projects, we will just use the MSI clock and let 
+it run at its default 4 MHz. Now, the timers' inputs then run through 
+the :hp2.prescaler:ehp2. and then into the counter; whenever the 
+:hp2.autoreload register:ehp2. value equals the counter value, an event 
+will be generated
+:fn.Remember, these are shown on :hdref refid=timevt.. 
+:efn.
+:p.The following picture shows the :q.wiring:eq. of this system:  
+:fig width=column place=inline frame=rules.
+:cgraphic.
+             CK_INT      &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.
+TIMxCLK &Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ar.&Lv.  Trigger   &Lv.
+        (internal clock) &Lv. Controller &Lv.
+                         &Ll.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.
+                           &Lv.                        &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.
+    &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.                   &Ul.&Lh.&Lh.&Lh.&Ar.&Lv. Flag &Lv.
+    &Lv.                                          &Lv.    &Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.
+    &Lv.     &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.     &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.        &Lv.               
+    &Ll.&Lh.&Lh.&Lh.&Lh.&Ar.&Lv. Prescaler &Tr.&Lh.&Lh.&Lh.&Lh.&Ar.&Lv. Counter &Tr.&Lh.&Lh.&Lh.&Lh.&Ar. Event &Lh.&Lh.&Lh.&Ur.
+          &Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.     &Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.               &Lv. 
+                                 &Au.                    &Lv.
+                                 &Lv.                    &Lv. 
+          &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.     &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.         &Lv. 
+          &Lv. UIE &Lv.     &Lv. Autoreload Register &Lv.         &Lv. 
+          &Ll.&Lh.&Lh.&Td.&Lh.&Lh.&Lr.     &Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.         &Lv. 
+             &Ad.      &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.                           &Lv. 
+      &Ul.&Lh.&Lh.&Lh.&Lh. AND &Al.&Lh.&Lh.&Lh.&Tl. UIF &Tr.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr. 
+      &Lv.             &Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.
+      &Ad.
+  Interrupt
+:ecgraphic.
+:figcap.TIMx wiring diagram
+:efig.
+:h2.Using Timers for Interrupts 
+:p.Before we can actually program any of the timers, we have to first 
+enable them -- that requires you to set the correct bit in either 
+:pk.RCC->APB1ENR1:epk. or :pk.RCC->APB2ENR:epk.. Here is a table of 
+what bit name you would set to :pv.1:epv. with the necessary C 
+statements listed: 
+:i2.Enabling (APB1/APB2 register) 
+:table id=timenb cols='1i 3i'.
+:tcap.TIMx Enablement Statements
+:thd.
+:c.:hp2.Timer:ehp2.
+:c.:hp2.C Statement:ehp2. 
+:ethd.
+:row.
+:c.:pv.TIM1:epv.
+:c.:pk.RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;:epk.
+:row.
+:c.:pv.TIM2:epv.
+:c.:pk.RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;:epk.
+:row.
+:c.:pv.TIM3:epv.
+:c.:pk.RCC->APB1ENR1 |= RCC_APB1ENR1_TIM3EN;:epk.
+:row.
+:c.:pv.TIM6:epv.
+:c.:pk.RCC->APB1ENR1 |= RCC_APB1ENR1_TIM6EN;:epk.
+:row.
+:c.:pv.TIM7:epv.
+:c.:pk.RCC->APB1ENR1 |= RCC_APB1ENR1_TIM7EN;:epk.
+:row.
+:c.:pv.TIM15:epv.
+:c.:pk.RCC->APB2ENR |= RCC_APB2ENR_TIM15EN;:epk.
+:row.
+:c.:pv.TIM16:epv.
+:c.:pk.RCC->APB2ENR |= RCC_APB2ENR_TIM16EN;:epk.
+:row.
+:c.:pv.LPTIM1:epv.
+:c.:pk.RCC->APB1ENR1 |= RCC_APB1ENR1_LPTIM1EN;:epk.
+:row.
+:c.:pv.LPTIM2:epv.
+:c.:pk.RCC->APB1ENR2 |= RCC_APB1ENR2_LPTIM2EN;:epk. 
+:etable.
+:note.See :tref refid=timtbl. for the bitness and counting direction 
+associated with the timers if you flipped to this table from the ToC or 
+index!
+:lblbox.What Timers are for What? 
+:p.Not all the timers are equal! Some of them are generally used for 
+different purposes, like so: 
+:dl.
+:dthd.Timer 
+:ddhd.Usage 
+:dt.:pv.TIM1:epv. 
+:dd.Synchronizing the ADC, interfacing with specific sensors, producing 
+multi-phase PWM signals 
+:dt.:pv.TIM2/3:epv. 
+:dd.PWM, high-accuracy interrupts, sampling input clock signals 
+:dt.:pv.TIM6/7:epv. 
+:dd.Low-accuracy interrupts (decade counters, slow interval timers)
+:dt.:pv.TIM15:epv. 
+:dd.Sampling the PWM of an input signal, high-accuracy interrupts 
+:dt.:pv.TIM16:epv. 
+:dd.High-accuracy interrupts  
+:dt.:pv.LPTIM1/2:epv. 
+:dd.Wakeup timers while the CPU is powered down 
+:dt.SysTick 
+:dd.Operating system scheduler jiffy (timeslice)
+:edl.
+:elblbox.
+:p.After you enable the timer block in the APB register that 
+corresponds to the timer in question, you need to set the 
+:hp2.prescaler.:ehp2. There is a formula that is very handy here to 
+help you derive the correct (16-bit) prescaler value: 
+:i2.Setting PSC   
+:fig width=column place=inline frame=rules.
+:df align=center.
+F sub <CK_CNT> = <F sub <CK_PSC>> over <PSC + 1> 
+:edf.
+:figcap.TIMx->PSC formula
+:efig.
+:p.Remember, by default, :f.F sub CK_CNT:ef. is 4 MHz! Knowing this, 
+you can solve for the prescaler value you want. Since we want to make 
+:hp5.interrupts,:ehp5. you need to also set the :hp2.autoreload 
+register.:ehp2. The formula to calculate this depends on the previous 
+formula's output value, and is as follows: 
+:fig width=column place=inline frame=rules.
+:df align=center.
+T sub out = <(ARR + 1) * (PSC + 1)> over <F sub CK_PSC>
+= <(ARR + 1)> over <F sub CK_CNT> 
+:edf.
+:figcap.TIMx->PSC formula
+:efig.
+:note.You will likely want to use the :hp1.second:ehp1. equated 
+function (the right-most one), because you can omit the prescaler for 
+faster clocks (which will be useful when you do :hp2.PWM:ehp2.).  
+:h3.Enabling the Timer 
+:p.TODO: code to enable timer and set PSC 
+:p.To do this, you would simply use one of the lines from 
+:tref refid=timenb.m like so (for TIM6):
+:h3.Enabling Interrupts
+:p.TODO: code to turn on interrupt 
+:h3.Timer ISR
+:p.TODO: timer ISR 
+:h2 id=pwm.Using Timers for PWM
 :h1 id=adc.ADC
 :appendix.
 :h1 id=biblio.Bibliography

@@ -1,7 +1,13 @@
 Asynchronous                                                                    
+Autoreload value                                                                
 ADC                                                                             
+AHB                                                                             
+APB                                                                             
 ARM                                                                             
 Bouncing                                                                        
+Clock                                                                           
+Clock divider                                                                   
+Clock scaling                                                                   
 Cortex-M                                                                        
 CAN                                                                             
 Debounce                                                                        
@@ -20,9 +26,11 @@ I2C
 Masking                                                                         
 NMI                                                                             
 NVIC                                                                            
+Prescaler                                                                       
 PC                                                                              
 PWM                                                                             
 Register                                                                        
+RCC                                                                             
 Synchronous                                                                     
 SysTick                                                                         
 SPI                                                                             
