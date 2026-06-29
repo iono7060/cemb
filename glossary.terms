@@ -5,6 +5,7 @@ AHB
 APB                                                                             
 ARM                                                                             
 Bouncing                                                                        
+Breakpoint                                                                      
 Clock                                                                           
 Clock divider                                                                   
 Clock scaling                                                                   
@@ -15,7 +16,9 @@ Debugger
 Duty cycle                                                                      
 DAC                                                                             
 DMA                                                                             
+EEPROM                                                                          
 EXTI                                                                            
+Flash                                                                           
 Full-duplex                                                                     
 GPIO                                                                            
 Half-duplex                                                                     
@@ -31,6 +34,7 @@ PC
 PWM                                                                             
 Register                                                                        
 RCC                                                                             
+ROM                                                                             
 Synchronous                                                                     
 SysTick                                                                         
 SPI                                                                             

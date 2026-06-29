@@ -3446,7 +3446,7 @@ a certain value, for example
 :p.Unless you have connected a timer's input to an input pin (in input 
 capture mode), you will need to utilize a :hp2.clock divider:ehp2. to 
 provide an input event source. As you might imagine, the clock divider 
-is dividing the :hp2.master system clock:ehp2.  
+is dividing the :hp2.master system clock.:ehp2.  
 :i2.Clock divider 
 :p.In order to derive a timer frequency, you must set two things: 
 :ol.
@@ -3493,7 +3493,7 @@ will be generated
 :p.The following picture shows the :q.wiring:eq. of this system:  
 :fig width=column place=inline frame=rules.
 :cgraphic.
-             CK_INT      &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.
+             CK_INT      &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.  
 TIMxCLK &Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ar.&Lv.  Trigger   &Lv.
         (internal clock) &Lv. Controller &Lv.
                          &Ll.&Lh.&Td.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.
@@ -3610,14 +3610,134 @@ T sub out = <(ARR + 1) * (PSC + 1)> over <F sub CK_PSC>
 function (the right-most one), because you can omit the prescaler for 
 faster clocks (which will be useful when you do :hp2.PWM:ehp2.).  
 :h3.Enabling the Timer 
-:p.TODO: code to enable timer and set PSC 
-:p.To do this, you would simply use one of the lines from 
-:tref refid=timenb.m like so (for TIM6):
+:p.To actually enable your timer, you would simply use one of the lines 
+from :tref refid=timenb. like so (for TIM6), and also set 
+:pk.TIMx->PSC:epk. alongside :pk.TIMx->ARR:epk.: 
+:fig width=column place=inline frame=rules.
+:xmp.
+void timersetup() {                    
+    RCC->APB1ENR1 |= RCC_APB1ENR1_TIM6EN; 
+    TIM6->ARR = 3972;                     
+    TIM6->PSC = 995;                      
+    TIM6->CR1 |= TIM6_CR1_CEN;  // enable counting                
+}                                      
+:exmp.
+:figcap.TIM6 initialization sample
+:efig.
 :h3.Enabling Interrupts
-:p.TODO: code to turn on interrupt 
+:p.At this point, TIM6 is active and counting... but it is 
+:hp2.not:ehp2. generating interrupts! To achieve this, there is a bit 
+we need to flip in the :pk.TIM(6,7)->DIER:epk. 
+:fn.DMA/Interrupt Enable Register
+:efn.
+register:
+:fig width=column place=inline frame=rules.
+:xmp.
+/* TIM6 */                      
+TIM6->DIER |= TIM_DIER_UIE;     
+NVIC_EnableIRQ(TIM6_IRQn);      
+NVIC_ClearPendingIRQ(TIM6_IRQn);
+:exmp.
+ 
+:figcap.TIM6 interrupt enablement example
+:efig.
 :h3.Timer ISR
-:p.TODO: timer ISR 
+:p.Last but not least, we need to write an :hp2.ISR:ehp2. 
+:fn.Interrupt Service Routine
+:efn.
+for our TIM6 IRQ that we are now generating:
+:fig width=column place=inline frame=rules.
+:xmp.
+void TIM6_IRQHandler() {          
+    // do something here...
+    TIM6->SR &= ~TIM_SR_UIF;            // silence interrupt flag 
+    NVIC_ClearPendingIRQ(TIM6_IRQn);    // dismiss interrupt 
+}                                
+:exmp.
+ 
+:figcap.TIM6 interrupt enablement example
+:efig.
+:p.This function needs to be named specifically for the timer; if you 
+were using TIM2, you would define the function as 
+:pv.TIM2_IRQHandler:epv.! Likewise, this function does :hp1.two:ehp1. 
+key things: 
+:ol.
+:li.Dismiss the interrupt flag within the timer's :hp2.status register:ehp2.
+:li.Dismiss the interrupt (or, more accurately, inform that processing 
+of the ISR is complete) on the NVIC 
+:eol.
+:lblbox.Taking Too Long! 
+:p.Something very important that some students will not take into 
+account (especially on their final projects) is that any code within a 
+timer ISR needs to :hp1.finish before the timer fires again!:ehp1. If 
+you have a timer that triggers every 10 milliseconds, the code 
+contained within that ISR's function body has to finish within 10 
+milliseconds; failure to do this will result in the CPU being stuck 
+processing the timer ISR forever! 
+:elblbox.
 :h2 id=pwm.Using Timers for PWM
+:p.:hp2.Pulse-width modulation:ehp2. is a trick wherein you vary the 
+:hp5.duty cycle:ehp5. of a square wave to achieve various analog 
+voltages. This can prove extremely useful for some control systems, 
+including: 
+:ul.
+:li.Motor speed 
+:li.LED brightness 
+:eul.
+:p.PWM works by :hp1.subdividing the output voltage of a digital I/O 
+pin:ehp1. by some precentage (the aforementioned duty cycle). PWM 
+looks, practically, like this: 
+:fig width=column place=inline frame=rules.
+:cgraphic.
+50% duty cycle:
+ 
+     &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.     &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.     &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.    
+     &Lv.     &Lv.     &Lv.     &Lv.     &Lv.     &Lv. 
+     &Lv.     &Lv.     &Lv.     &Lv.     &Lv.     &Lv. 
+&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.     &Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.     &Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.     &Ll.&Lh.&Lh.&Lh.&Lh.&Lh. 
+ 
+25% duty cycle:
+ 
+     &Ul.&Lh.&Lh.&Ur.        &Ul.&Lh.&Lh.&Ur.        &Ul.&Lh.&Lh.&Ur.       
+     &Lv.  &Lv.        &Lv.  &Lv.        &Lv.  &Lv.    
+     &Lv.  &Lv.        &Lv.  &Lv.        &Lv.  &Lv.    
+&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.  &Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.  &Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.  &Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh. 
+:ecgraphic.
+:figcap.PWM duty cycles
+:efig.
+:note.100% duty cycle would be flat DC, and 0% duty cycle would be no 
+signal at all! 
+:p.The :hp2.period:ehp2. corresponds to the :hp5.width of the 
+pulse:ehp5. and is not the same as the duty cycle. Here is the period 
+and the duty cycle of a square wave:
+:fig width=column place=inline frame=rules.
+:cgraphic.
+     &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.     &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.     &Ul.&Lh.&Lh.&Lh.&Lh.&Lh.&Ur.    
+     &Lv.     &Lv.     &Lv.     &Lv.     &Lv.     &Lv. 
+     &Lv.     &Lv.     &Lv.     &Lv.     &Lv.     &Lv. 
+&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.     &Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.     &Ll.&Lh.&Lh.&Lh.&Lh.&Lh.&Lr.     &Ll.&Lh.&Lh.&Lh.&Lh.&Lh. 
+     &Lv.&Al.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Lh.&Ar.&Lv. Period
+     &Lv.&Al.&Lh.&Lh.&Lh.&Ar.&Lv. Duty Cycle 
+        
+:ecgraphic.
+:figcap.PWM period versus duty cycle
+:efig.
+:p.So, how does the output voltage derived from our PWM wave actually 
+correlate to the duty cycle? Well, examine the handy input chart that 
+follows. 
+:note.The STM32 I/O pins have a logic :pk.1:epk. of :hp5.3.3 
+volts:ehp5., so 100% duty cycle corresponds to exactly that. 
+:fig width=column place=inline frame=rules.
+:artwork name=pwmvals.  
+:figcap.PWM and duty cycle relation plot
+:efig.
+:h3.Selecting a Timer 
+:p.First and foremost, :hp5.not all timers can be used for PWM!:ehp5. 
+See the table :tref refid=timtbl. and note that :hp2.channel:ehp2. 
+column -- if a timer has zero channels (like :pv.TIM6:epv. and 
+:pv.TIM7:epv.), it :hp1.cannot:ehp1. be used for PWM! Likewise, we will 
+demonstrate with :pv.TIM2:epv. (which can drive more than one PWM 
+output at a time, but we will just be using one).  
 :h1 id=adc.ADC
 :appendix.
 :h1 id=biblio.Bibliography
@@ -3754,20 +3874,42 @@ C library in :pk.string.h:epk..
 for the event to complete. DMA is asynchronous.
 :gt.ADC
 :gd.Analog-to-Digital Converter. Samples an analog signal at specific 
-times and converts it into a numeric representation.
+times and converts it into a numeric representation. See 
+:hdref refid=ADC. for more information! 
+:gt.AHB 
+:gd.Advanced High-performance Bus, the integrated data bus on the STM32 
+that, like the :hp1.APB:ehp1., is hot-controllable. 
+:gt.APB
+:gd.Advanced Peripheral Bus, the integrated bus on the STM32 that 
+features peripherals that can be connected and disconnected from the 
+CPU at will. 
 :gt.ARM
 :gd.Advanced RISC Machine (originally Acorn RISC Machines, after the 
 English computer company), the CPU architecture that the STM32 
 implements.
+:gt.ARR (Auto-reload register) 
+:gd.When you set the ARR register, a :hp1.counter:ehp1. will count up 
+to this value and then generate an event. See :hdref refid=timers. for 
+more information! 
 :grpsep.B
 :gt.Bouncing
 :gd.Unwanted jittering when a button is being pressed or released that 
 may result in excessive interrupt generation or unstable control signal 
 input.
+:gt.Breakpoint 
+:gd.A specific memory address or line in a function that you wish for 
+execution to stop on; these are implemented by the :hp1.debugger.:ehp1.
 :grpsep.C
 :gt.CAN
 :gd.Controller Area Network. A multi-device bus-type network frequently 
 used in automobiles and other such similar control systems.
+:gt.Clock divider 
+:gd.A circuit (which, on the STM32, is configurable with the 
+:pk.RCC:epk. register block) that divides the frequency of some master 
+oscillator clock by some value to lower it. 
+:gt.Clock 
+:gd.A square-wave oscillator that clocks a sequential logic circuit, 
+like a CPU. 
 :grpsep.D
 :gt.DAC
 :gd.Digital-to-Analog Converter. Takes a 12-bit decimal value and 
@@ -3789,11 +3931,19 @@ DMA event usually results in the generation of an interrupt.
 :gd.The percentage in which a square wave is turned "on", wherein a 50% 
 duty cycle looks like a normal square wave.
 :grpsep.E
+:gt.EEPROM 
+:gd.Electronically-Erasable ROM, a block of memory on a microcontroller 
+or discrete IC package that is intended to be written only a few times, 
+but read far more times. 
 :gt.EXTI
 :gd.External Interrupt. When a GPIO pin is allowed to flow to the CPU 
 and generate an interrupt (by configuring the NVIC and EXTI register 
 blocks), you are generating an EXTI event.
 :grpsep.F
+:gt.Flash 
+:gd.A type of :hp1.EEPROM:ehp1. that contains the stored program a 
+microcontroller runs; some types of flash blocks on an STM32 can be 
+used for user data. 
 :gt.Full-duplex
 :gd.A serial interface that permits communication in both directions 
 simultaneously. UART is full-duplex.
@@ -3828,14 +3978,24 @@ usually triggered when the device malfunctions.
 controller block found on :hp1.ARM Cortex-M:ehp1. series 
 microcontroller CPUs.
 :grpsep.P
+:gt.PC
+:gd.Program Counter. This is the :hp1.register:ehp1. that holds the 
+memory address of the currently-executing CPU instruction.
+:gt.Prescaler 
+:gd.This is a type of :hp1.clock divider:ehp1. that controls the input 
+clock frequency to a :hp1.timer.:ehp1.
 :gt.PWM
 :gd.Pulse-Width-Modulation. A simple way of getting a quasi-analog 
 signal with a variable voltage from a bilevel (i.e. on or off) digital 
 I/O pin by modulating the :hp1.duty cycle:ehp1. of the pin.
-:gt.PC
-:gd.Program Counter. This is the :hp1.register:ehp1. that holds the 
-memory address of the currently-executing CPU instruction.
 :grpsep.R
+:gt.RCC 
+:gd.Register and Clock Control, the control register that allows you to 
+set the system clock source and other such things. This contains the 
+:hp1.AHB:ehp1. and :hp1.APB:ehp1. control registers. 
+:gt.ROM 
+:gd.Read-Only Memory, a type of memory that usually contains the stored 
+program a microcontroller or computer system runs. 
 :gt.Register
 :gd.32-bit high-speed fields within the CPU that is the fundamental 
 working storage for the CPU; see your notes from Computer Systems for 
